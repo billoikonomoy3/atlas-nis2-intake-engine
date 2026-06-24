@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas — NIS2 Stage-3 Intake Engine</title>
+<style>
+  :root{
+    --navy:#0f2740; --navy2:#16395c; --teal:#1f8a8a; --accent:#2f80ed;
+    --ink:#1b2733; --muted:#5b6b7b; --line:#e2e8ef; --bg:#f5f7fa; --card:#ffffff;
+    --ess:#c0392b; --imp:#2f6fbf; --out:#7a8794; --def:#7d4fbf;
+    --ok:#1e8e54; --warn:#b8860b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  header{background:linear-gradient(100deg,var(--navy),var(--navy2));color:#fff;padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header .brand{font-size:20px;font-weight:700;letter-spacing:.3px}
+  header .brand span{color:#69d0d0}
+  header .tag{color:#b9c8d6;font-size:12.5px;flex:1;min-width:200px}
+  .badge{font-size:12px;padding:4px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
+  .badge.pass{background:#103a26;color:#7be0a8;border:1px solid #1e8e54}
+  .badge.fail{background:#3a1010;color:#ff9a9a;border:1px solid #c0392b}
+  .layout{display:grid;grid-template-columns:215px 1fr 320px;gap:18px;padding:18px 22px;align-items:start}
+  nav.steps{position:sticky;top:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:2px}
+  nav.steps button{all:unset;cursor:pointer;padding:9px 12px;border-radius:7px;color:var(--muted);font-weight:600;font-size:13px;display:flex;gap:9px;align-items:center}
+  nav.steps button .n{width:20px;height:20px;border-radius:50%;background:var(--line);color:var(--muted);font-size:11px;display:grid;place-items:center;flex:none}
+  nav.steps button.active{background:#eaf1fb;color:var(--navy)}
+  nav.steps button.active .n{background:var(--accent);color:#fff}
+  main{min-width:0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:16px}
+  .card h2{margin:0 0 4px;font-size:18px;color:var(--navy)}
+  .card .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+  section[data-step]{display:none}
+  section[data-step].show{display:block}
+  label{display:block;font-weight:600;font-size:12.5px;color:var(--muted);margin:12px 0 4px}
+  input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font:inherit;background:#fff}
+  input:focus,select:focus,textarea:focus{outline:2px solid #cfe0fb;border-color:var(--accent)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .btn{all:unset;cursor:pointer;background:var(--accent);color:#fff;padding:9px 15px;border-radius:7px;font-weight:600;font-size:13px;text-align:center}
+  .btn.ghost{background:#eef3f9;color:var(--navy)}
+  .btn.sm{padding:6px 11px;font-size:12px}
+  .btn.warn{background:#fff3df;color:#8a5a00;border:1px solid #f0d49a}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .rule{background:#f0f6f6;border:1px solid #cfe6e6;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#27585a;margin-top:10px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .chk{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink)}
+  .chk input{width:auto;margin-top:2px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  .tag-pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:700}
+  .csf{background:#eaf1fb;color:#2f6fbf}
+  aside.live{position:sticky;top:14px;display:flex;flex-direction:column;gap:14px}
+  .verdict{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .verdict .head{padding:12px 16px;color:#fff;font-weight:700}
+  .verdict .body{padding:14px 16px;font-size:13px}
+  .kv{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--line)}
+  .kv:last-child{border:0}
+  .kv b{font-weight:700}
+  .cls-essential{background:var(--ess)} .cls-important{background:var(--imp)}
+  .cls-out_of_scope{background:var(--out)} .cls-deferred_designation{background:var(--def)}
+  .meter{height:9px;border-radius:6px;background:var(--line);overflow:hidden;margin:7px 0}
+  .meter>i{display:block;height:100%;background:linear-gradient(90deg,#1e8e54,#b8860b,#c0392b)}
+  .nodeRow,.exRow{display:grid;gap:8px;align-items:end;border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:8px;background:#fbfdff}
+  .nodeRow{grid-template-columns:1.4fr .8fr .9fr .9fr .8fr .9fr auto}
+  .exRow{grid-template-columns:1fr 1.3fr 1fr auto}
+  .nodeRow label,.exRow label{margin:0 0 3px}
+  .del{all:unset;cursor:pointer;color:#c0392b;font-weight:700;padding:8px;font-size:16px}
+  .trace{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;background:#0f2740;color:#cfe0ee;border-radius:8px;padding:12px;overflow:auto;white-space:pre-wrap}
+  .audit{font-size:12.5px;border-left:3px solid var(--teal);padding:4px 0 4px 12px;margin:5px 0;color:#2b4a4a}
+  .flag{background:#fff7e6;border:1px solid #f0d49a;border-radius:7px;padding:7px 10px;font-size:12.5px;color:#7a5600;margin-top:6px}
+  .memo h3{color:var(--navy);font-size:14px;border-bottom:2px solid var(--line);padding-bottom:5px;margin:18px 0 8px}
+  .memo .sec{margin-bottom:6px}
+  .pbc li{margin:3px 0}
+  .footerbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .small{font-size:11.5px;color:var(--muted)}
+  @media(max-width:1100px){.layout{grid-template-columns:1fr}nav.steps{flex-direction:row;overflow:auto}aside.live{position:static}}
+  @media print{
+    header,nav.steps,aside.live,.noprint,nav{display:none!important}
+    .layout{display:block;padding:0}
+    section[data-step]{display:none!important}
+    #memoPrint{display:block!important}
+    .card{border:0;padding:0}
+  }
+  #memoPrint{display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Atlas<span>·</span>NIS2 Scope</div>
+  <div class="tag">Stage-3 Intake Engine — applicability, scope, criteria &amp; proportionality from facts alone. Offline · deterministic · audit-grade.</div>
+  <div id="selftest" class="badge">engine self-test…</div>
+</header>
+
+<div class="layout">
+  <nav class="steps" id="nav"></nav>
+
+  <main>
+    <!-- 0 ENGAGEMENT -->
+    <section data-step="0" class="show">
+      <div class="card">
+        <h2>0 · Engagement</h2>
+        <div class="sub">Sets the audit header that flows onto the scope memo. Or load a worked scenario to see the full flow instantly.</div>
+        <label>Load a worked scenario (optional)</label>
+        <div class="row">
+          <select id="preset"><option value="">— choose —</option></select>
+          <button class="btn ghost sm" onclick="loadPreset()">Load</button>
+          <button class="btn warn sm" onclick="resetAll()">Reset</button>
+        </div>
+        <div class="grid2">
+          <div><label>Target legal entity</label><input id="f_name" placeholder="e.g. PowerGrid Hellas S.A."></div>
+          <div><label>LEI / registration no.</label><input id="f_lei" placeholder="optional"></div>
+          <div><label>Assessor</label><input id="f_assessor" placeholder="prepared by"></div>
+          <div><label>Reviewer</label><input id="f_reviewer" placeholder="reviewed by"></div>
+          <div><label>Assessment date</label><input id="f_date" type="date"></div>
+          <div><label>Evidence window</label><input id="f_window" placeholder="e.g. FY2024 + FY2023 filed accounts"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1 SECTOR -->
+    <section data-step="1">
+      <div class="card">
+        <h2>1 · Sector</h2>
+        <div class="sub">Annex I (high-criticality) vs Annex II (other-critical) sets the height of the bar once size is known.</div>
+        <label>Primary sector</label>
+        <select id="f_sector"></select>
+        <div class="rule" id="sectorRule">—</div>
+      </div>
+    </section>
+
+    <!-- 2 SIZE -->
+    <section data-step="2">
+      <div class="card">
+        <h2>2 · Size — the target entity (standalone figures)</h2>
+        <div class="sub">2003/361/EC. Staff is a <b>hard ceiling</b> (≥). The financial limb is read in the entity's favour: you breach it only by exceeding <b>BOTH</b> turnover AND balance sheet (&gt;).</div>
+        <div class="grid3">
+          <div><label>Staff (headcount, AWU)</label><input id="f_staff" type="number" min="0" value="0"></div>
+          <div><label>Annual turnover (EUR)</label><input id="f_turnover" type="number" min="0" value="0"></div>
+          <div><label>Balance-sheet total (EUR)</label><input id="f_balance" type="number" min="0" value="0"></div>
+        </div>
+        <div class="rule">Medium ≥ 50 staff OR (turnover &gt; €10m AND balance &gt; €10m). &nbsp; Large ≥ 250 staff OR (turnover &gt; €50m AND balance &gt; €43m).</div>
+        <div class="footerbtns">
+          <button class="btn warn sm" onclick="loadTrap()">▶ Load the false-positive trap (40 staff / €15m / €5m)</button>
+        </div>
+        <div class="hint">The trap demonstrates why "or €10m turnover" is negligent: that firm is <b>small / out of scope</b> because its balance sheet is only €5m.</div>
+      </div>
+    </section>
+
+    <!-- 3 GROUP -->
+    <section data-step="3">
+      <div class="card">
+        <h2>3 · Group structure — Article 6 aggregation</h2>
+        <div class="sub">Size is assessed on <b>consolidated</b> figures: +100% of each linked (controlled, &gt;50%) enterprise and a pro-rata share of partner (25–50%) enterprises. A subsidiary of a multinational is never a microenterprise.</div>
+        <div id="nodes"></div>
+        <div class="footerbtns">
+          <button class="btn ghost sm" onclick="addNode()">+ Add related enterprise</button>
+          <button class="btn warn sm" onclick="loadSubsidiary()">▶ Load: 20-staff subsidiary of a 5,000-staff parent</button>
+        </div>
+        <div id="aggBox" class="trace" style="margin-top:12px">add nodes to see the consolidation arithmetic…</div>
+      </div>
+    </section>
+
+    <!-- 4 TWO-YEAR -->
+    <section data-step="4">
+      <div class="card">
+        <h2>4 · Two-year rule (Art 4(2))</h2>
+        <div class="sub">A size change only takes effect once a ceiling is crossed in <b>two consecutive</b> accounting periods. A single anomalous year does not flip scope.</div>
+        <div class="grid2">
+          <div><label>Previously established band</label>
+            <select id="f_prior"><option value="">— none (current applies) —</option><option>below_medium</option><option>medium</option><option>large</option></select></div>
+          <div><label>Consecutive periods in the new band</label>
+            <input id="f_years" type="number" min="0" value="2"></div>
+        </div>
+        <div class="rule" id="tyRule">No prior band set — the current period's band applies directly.</div>
+      </div>
+    </section>
+
+    <!-- 5 OVERRIDES + EXPOSURE -->
+    <section data-step="5">
+      <div class="card">
+        <h2>5 · Article 3 / 2(2) overrides &amp; exposure</h2>
+        <div class="sub">These are encoded, not deferred. Any one can force <b>essential</b> regardless of size.</div>
+        <label>Special-entity type (Article 3)</label>
+        <div class="chips" id="flags">
+          <label class="chk"><input type="checkbox" value="qtsp"> Qualified trust service provider (QTSP)</label>
+          <label class="chk"><input type="checkbox" value="dns"> DNS service provider</label>
+          <label class="chk"><input type="checkbox" value="tld"> TLD name registry</label>
+          <label class="chk"><input type="checkbox" value="ecomms"> Public e-comms network / service</label>
+          <label class="chk"><input type="checkbox" value="public_admin_central"> Central-government body</label>
+          <label class="chk"><input type="checkbox" value="public_admin_local"> Local-government body (NL transposition)</label>
+        </div>
+        <label>Article 2(2) Member-State designation (sole national / systemic provider)</label>
+        <select id="f_design"><option value="">none</option><option value="pending">pending (act not yet made)</option><option value="active">active (in force)</option></select>
+        <div class="grid3" style="margin-top:6px">
+          <div><label>Cross-border / systemic role</label>
+            <select id="f_xborder"><option value="none">none</option><option value="cross_border">cross-border</option><option value="systemic">systemic / sole-national</option></select></div>
+          <div><label># geographies (Member States)</label><input id="f_geo" type="number" min="1" value="1"></div>
+          <div><label># legal entities in scope</label><input id="f_ent" type="number" min="1" value="1"></div>
+        </div>
+        <label>Supply-chain / dependency exposure (pre-PBC, coarse)</label>
+        <select id="f_supply"><option value="low">low</option><option value="moderate">moderate</option><option value="high">high</option></select>
+      </div>
+    </section>
+
+    <!-- 6 EXCLUSIONS -->
+    <section data-step="6">
+      <div class="card">
+        <h2>6 · Assessment scope &amp; exclusions</h2>
+        <div class="sub">Exclusions are first-class, recorded data — never silent. Each carve-out needs a reason and a legal basis.</div>
+        <div id="excls"></div>
+        <div class="footerbtns"><button class="btn ghost sm" onclick="addExcl()">+ Add exclusion</button></div>
+      </div>
+    </section>
+
+    <!-- 7 VERDICT -->
+    <section data-step="7">
+      <div class="card">
+        <h2>7 · Verdict &amp; scope memo</h2>
+        <div class="sub">Assembled from the facts above with the rule path traced for every line. This is the pre-PBC work product.</div>
+        <div class="footerbtns noprint">
+          <button class="btn" onclick="window.print()">🖨 Print / PDF memo</button>
+          <button class="btn ghost" onclick="copyMemo()">⧉ Copy memo</button>
+          <button class="btn ghost" onclick="exportJSON()">⤓ Export input snapshot (JSON)</button>
+        </div>
+        <div id="memo" class="memo"></div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="live">
+    <div class="verdict">
+      <div class="head" id="vHead">—</div>
+      <div class="body">
+        <div class="kv"><span>In scope</span><b id="vScope">—</b></div>
+        <div class="kv"><span>Class</span><b id="vClass">—</b></div>
+        <div class="kv"><span>Size band</span><b id="vBand">—</b></div>
+        <div class="kv"><span>Consolidated staff</span><b id="vStaff">—</b></div>
+        <div class="kv"><span>Proportionality</span><b id="vTier">—</b></div>
+        <div class="meter"><i id="vMeter" style="width:0%"></i></div>
+        <div class="small" id="vScore"></div>
+      </div>
+    </div>
+    <div class="verdict"><div class="body small" id="vReason" style="color:var(--muted)">Enter facts or load a scenario.</div></div>
+  </aside>
+</div>
+
+<div id="memoPrint"></div>
+
+<script>
+/* ===================== ENGINE (faithful port of scope.py) ===================== */
+const ANNEX_I=["Energy","Transport","Banking","Financial market infrastructures","Health","Drinking water","Waste water","Digital infrastructure","ICT service management (B2B)","Public administration","Space"];
+const ANNEX_II=["Postal and courier services","Waste management","Manufacture, production and distribution of chemicals","Production, processing and distribution of food","Manufacturing","Digital providers","Research"];
+const norm=s=>(s||"").trim().toLowerCase().replace(/\s+/g," ");
+const _I=new Set(ANNEX_I.map(norm)), _II=new Set(ANNEX_II.map(norm));
+function annexOf(s){const k=norm(s); if(_I.has(k))return"I"; if(_II.has(k))return"II"; return"none";}
+const MS=50,MT=10e6,MB=10e6,LS=250,LT=50e6,LB=43e6;
+const RANK={out_of_scope:0,deferred_designation:0,important:1,essential:2};
+
+function linkClass(pct,control){
+  if(control===true||pct>50)return["linked",1.0];
+  if(pct>=25)return["partner",pct/100];
+  return["autonomous",0];
+}
+function consolidate(node,trace,depth){
+  trace=trace||[];depth=depth||0;
+  let cs=+node.staff,ct=+node.turnover,cb=+node.balance;
+  if(depth===0)trace.push({node:node.name,link:"self (root)",mult:1,staff:cs,turnover:ct,balance:cb,depth});
+  (node.related||[]).forEach(ch=>{
+    const[link,mult]=linkClass(+ch.holding_pct,ch.control);
+    const r=consolidate(ch,trace,depth+1);
+    cs+=mult*r.staff;ct+=mult*r.turnover;cb+=mult*r.balance;
+    trace.push({node:ch.name,link,holding_pct:+ch.holding_pct,mult,nodeStaff:r.staff,staff:mult*r.staff,turnover:mult*r.turnover,balance:mult*r.balance,depth:depth+1});
+  });
+  return{staff:cs,turnover:ct,balance:cb,trace};
+}
+function sizeBand(f){
+  if(f.staff>=LS||(f.turnover>LT&&f.balance>LB))return"large";
+  if(f.staff>=MS||(f.turnover>MT&&f.balance>MB))return"medium";
+  return"below_medium";
+}
+function applyTwoYear(raw,prior,years){
+  if(!prior||raw===prior)return[raw,"current band applies (no sustained change to test)"];
+  if(years>=2)return[raw,`change to '${raw}' sustained over ${years} consecutive periods (Art 4(2)) — applies`];
+  return[prior,`change to '${raw}' seen in only ${years} period; Art 4(2) holds prior band '${prior}'`];
+}
+function classifyEntity(o){
+  const flags=(o.special_flags||[]).slice();const audit=[];
+  const inI=o.sector_annex==="I",inII=o.sector_annex==="II";
+  audit.push(`Sector: Annex ${o.sector_annex}${o.sector_name?` (${o.sector_name})`:""}`);
+  const c=consolidate(o.root);
+  const fig={staff:c.staff,turnover:c.turnover,balance:c.balance};
+  if(c.trace.length>1)audit.push(`Article 6 consolidation over ${c.trace.length} nodes → staff=${fig.staff}, turnover=€${Math.round(fig.turnover).toLocaleString()}, balance=€${Math.round(fig.balance).toLocaleString()}`);
+  else audit.push(`Standalone figures: staff=${fig.staff}, turnover=€${Math.round(fig.turnover).toLocaleString()}, balance=€${Math.round(fig.balance).toLocaleString()}`);
+  const raw=sizeBand(fig);
+  const[band,tyNote]=applyTwoYear(raw,o.prior_band||null,o.years_breached==null?2:+o.years_breached);
+  audit.push(`Size band (2003/361): raw='${raw}'. ${tyNote}. Effective band='${band}'.`);
+  let base,baseReason;
+  if(inI&&band==="large"){base="essential";baseReason="Annex I (high-criticality) + large ⇒ essential";}
+  else if(inI&&band==="medium"){base="important";baseReason="Annex I (high-criticality) + medium ⇒ important";}
+  else if(inII&&(band==="medium"||band==="large")){base="important";baseReason=`Annex II (other-critical) + ${band} ⇒ important (never essential by size)`;}
+  else{base="out_of_scope";baseReason=`sector Annex ${o.sector_annex} + '${band}' ⇒ out of scope on size`;}
+  audit.push(`Base classification: ${base} (${baseReason}).`);
+  let cls=base,inScope=base!=="out_of_scope";
+  const promote=(nc,why)=>{audit.push(`Override: ${why} ⇒ ${nc}.`);if(RANK[nc]>=RANK[cls])cls=nc;inScope=inScope||nc==="essential"||nc==="important";};
+  const exempt=flags.filter(f=>["qtsp","dns","tld"].includes(f));
+  if(exempt.length)promote("essential",`Art 3 — ${exempt.join(", ").toUpperCase()} is essential regardless of size`);
+  if(flags.includes("ecomms")){
+    if(band==="medium"||band==="large")promote("essential","Art 3 — medium/large public e-comms provider is essential (not merely important)");
+    else audit.push("Note: e-comms override applies only to medium/large; below-medium provider is NOT rescued.");
+  }
+  const pub=flags.filter(f=>["public_admin_central","public_admin_local"].includes(f));
+  if(pub.length){promote("essential","Art 2(2)/Art 3 — public administration body in scope regardless of size");flags.push("ASSUMPTION: essential class for sub-medium public administration is transposition-dependent (verify Member-State law).");}
+  if(o.art2_2_designation==="active")promote("essential","Art 2(2) — Member-State designation in force, essential at any size");
+  else if(o.art2_2_designation==="pending"){
+    if(cls==="out_of_scope"){cls="deferred_designation";flags.push("DEFERRED: Art 2(2) designation requires a Member-State act not yet made — hold pending the act.");audit.push("Override: Art 2(2) designation PENDING ⇒ deferred_designation (not yet in scope).");}
+    else audit.push("Note: Art 2(2) designation pending, but entity is already in scope on other grounds.");
+  }
+  let reason=baseReason;
+  if(cls!==base)reason=`${baseReason}; overridden to ${cls} by Article 3/2(2)`;
+  else if(cls==="deferred_designation")reason="out of scope on size, but a pending Art 2(2) designation may bring it in — human/legal review";
+  return{in_scope:inScope,entity_class:cls,size_band:band,raw_size_band:raw,consolidated:fig,sector_annex:o.sector_annex,reason,audit,aggregation_trace:c.trace,flags};
+}
+
+/* ===================== PROPORTIONALITY (port of criteria.py) ===================== */
+const TIERS=[["Foundational",0,39],["Standard",40,59],["Enhanced",60,79],["Critical",80,100]];
+const SZP={large:25,medium:14,below_medium:6},CLP={essential:25,important:12,out_of_scope:0,deferred_designation:0},
+ANP={I:15,II:8,none:0},XBP={systemic:15,sole_national:15,cross_border:9,none:0},SUP={high:5,moderate:3,low:0};
+function footprint(g,e){const G=n=>n>=7?10:n>=4?7:n>=2?4:0,E=n=>n>=11?10:n>=5?7:n>=2?4:0;return Math.max(G(g||1),E(e||1));}
+function tierFor(s){for(const[n,lo,hi]of TIERS)if(s>=lo&&s<=hi)return n;return"Critical";}
+function proportionality(o){
+  const p={size_band:SZP[o.size_band]||0,entity_class:CLP[o.entity_class]||0,sector_annex:ANP[o.sector_annex]||0,
+    cross_border_systemic:XBP[o.cross_border_systemic]||0,footprint:footprint(o.n_geographies,o.n_entities),
+    special_entity:o.special_entity?5:0,supply_chain:SUP[o.supply_chain]||0};
+  const raw=Object.values(p).reduce((a,b)=>a+b,0);let score=raw;const floors=[];
+  if(o.entity_class==="essential"&&score<60){score=60;floors.push("essential ⇒ floored to Enhanced (≥60)");}
+  if(["systemic","sole_national"].includes(o.cross_border_systemic)&&score<80){score=80;floors.push("systemic / sole-national ⇒ floored to Critical (≥80)");}
+  return{points:p,raw_score:raw,score,floors_applied:floors,tier:tierFor(score)};
+}
+
+/* ===================== CRITERIA SET (port of criteria.py) ===================== */
+const CRITERIA=[
+ {id:"GOV-20-01",ref:"Art 20(1)",dom:"governance",ob:"Management body approves the cyber risk-management measures and oversees implementation; leadership is accountable and can be held liable.",csf:"GV",subs:["GV.RM-01","GV.RR-01","GV.OC-03"],iso:["5.1","5.2","5.3","5.4"],ev:["Board minutes approving the framework","Signed infosec policy with exec ownership","Documented cyber accountability assignment"],pbc:["Board minutes evidencing approval & oversight","Approved infosec policy with version history","Interview: accountable management-body member","Governance RACI for cybersecurity"]},
+ {id:"GOV-20-02",ref:"Art 20(2)",dom:"governance",ob:"Management-body members undergo cyber training; staff are offered equivalent training.",csf:"GV",subs:["GV.RR-02","GV.RR-04","PR.AT-02"],iso:["6.3","7.2","7.3"],ev:["Leadership training records/attendance","Executive training curriculum"],pbc:["Cyber training records for management body","Leadership training syllabus","Policy mandating recurring training"]},
+ {id:"RM-21A-01",ref:"Art 21(2)(a)",dom:"risk-measures",ob:"Documented policies on risk analysis and information-system security.",csf:"ID",subs:["ID.RA-01","ID.RA-05","GV.RM-02","GV.PO-01"],iso:["5.1","6.1","8.8","5.7"],ev:["Risk-assessment methodology","Current risk register with owners","Risk treatment plan"],pbc:["Risk methodology + infosec policy","Current risk register & treatment plan","Evidence of last assessment cycle + sign-off"]},
+ {id:"RM-21B-01",ref:"Art 21(2)(b)",dom:"risk-measures",ob:"Incident handling across detection, analysis, containment, response and post-incident review.",csf:"RS",subs:["RS.MA-01","RS.AN-03","DE.AE-02","RS.CO-02"],iso:["5.24","5.25","5.26","5.27","5.28"],ev:["Incident response plan/playbooks","Incident log with triage/closure","Post-incident review reports"],pbc:["Incident response plan and playbooks","Incident register (12 months)","Sample post-incident review","Interview: IR lead / SOC manager"]},
+ {id:"RM-21C-01",ref:"Art 21(2)(c)",dom:"risk-measures",ob:"Business continuity — backup, disaster recovery and crisis management.",csf:"RC",subs:["RC.RP-01","PR.DS-11","GV.OC-04","RC.CO-03"],iso:["5.29","5.30","8.13","8.14"],ev:["BCP/DRP with RTO/RPO","Backup policy + restoration test","Crisis management plan"],pbc:["BCP, DRP, crisis plan with RTO/RPO","Backup policy + latest restore test","Results of latest BCP/DR exercise"]},
+ {id:"RM-21D-01",ref:"Art 21(2)(d)",dom:"risk-measures",ob:"Supply-chain security — security of supplier/service-provider relationships, assessed and contracted.",csf:"GV",subs:["GV.SC-01","GV.SC-06","GV.SC-07","ID.RA-10"],iso:["5.19","5.20","5.21","5.22"],ev:["Supplier security policy","Supplier register with criticality","Contracts with security clauses"],pbc:["Third-party security policy & procedure","Supplier register with risk ratings","Sample supplier contracts","Interview: vendor risk owner"]},
+ {id:"RM-21E-01",ref:"Art 21(2)(e)",dom:"risk-measures",ob:"Security in acquisition, development and maintenance incl. vulnerability handling & disclosure.",csf:"PR",subs:["PR.PS-06","ID.RA-01","ID.RA-06","RS.MI-02"],iso:["8.8","8.25","8.28","8.29"],ev:["Secure SDLC policy","Vulnerability management with SLAs","Coordinated disclosure policy"],pbc:["SDLC / secure-coding standards","Vulnerability procedure + patch SLAs","Disclosure policy","Recent scan + remediation tracker"]},
+ {id:"RM-21F-01",ref:"Art 21(2)(f)",dom:"risk-measures",ob:"Policies/procedures to assess the effectiveness of the risk-management measures.",csf:"ID",subs:["ID.IM-01","ID.IM-02","GV.OV-01","GV.OV-03"],iso:["9.1","9.2","9.3","10.2"],ev:["Internal audit programme","Audit reports + management review","KPI/KRI dashboards"],pbc:["Control-assessment programme & schedule","Recent audit reports + review minutes","KPI/KRI dashboards","Corrective-action register"]},
+ {id:"RM-21G-01",ref:"Art 21(2)(g)",dom:"risk-measures",ob:"Basic cyber hygiene and security training for staff.",csf:"PR",subs:["PR.AT-01","PR.AT-02","GV.RR-04"],iso:["6.3","8.7","8.19"],ev:["Cyber hygiene standards","Awareness programme + completion","Phishing simulation results"],pbc:["Cyber hygiene policy/standards","Awareness programme + completion records","Phishing simulation results"]},
+ {id:"RM-21H-01",ref:"Art 21(2)(h)",dom:"risk-measures",ob:"Policies on cryptography and, where appropriate, encryption.",csf:"PR",subs:["PR.DS-01","PR.DS-02","PR.DS-10"],iso:["8.24","5.10","8.1"],ev:["Cryptography policy + approved algorithms","Key management procedure","Encryption at rest/in transit evidence"],pbc:["Cryptography/encryption policy","Key-management procedure","Encryption evidence for critical systems"]},
+ {id:"RM-21I-01",ref:"Art 21(2)(i)",dom:"risk-measures",ob:"Human-resources security, access control and asset management.",csf:"PR",subs:["PR.AA-01","PR.AA-05","ID.AM-01","ID.AM-02"],iso:["6.1","6.5","5.15","5.18","5.9"],ev:["Access control + JML procedure","Asset inventory with owners","Access-review records"],pbc:["Access control + joiner/mover/leaver procedure","Asset inventory with owners","Access-recertification records","HR screening evidence"]},
+ {id:"RM-21J-01",ref:"Art 21(2)(j)",dom:"risk-measures",ob:"MFA/continuous auth, secured voice/video/text, and secured emergency communications.",csf:"PR",subs:["PR.AA-03","PR.AA-05","PR.DS-02","PR.IR-01"],iso:["8.5","8.3","8.24","8.20"],ev:["MFA policy + configuration","Secured communication tooling","Emergency comms plan"],pbc:["MFA/authentication policy + config","Secured comms tooling evidence","Emergency / out-of-band comms plan"]},
+ {id:"REP-23-01",ref:"Art 23(4)(a)",dom:"reporting",ob:"Early warning to CSIRT/authority within 24 hours of awareness of a significant incident.",csf:"RS",subs:["RS.CO-02","RS.MA-01","RS.AN-03"],iso:["5.24","5.25","5.5","5.6"],ev:["Reporting procedure with 24h trigger","Significant-incident criteria","CSIRT/authority contacts"],pbc:["Reporting procedure (24h early warning)","Significant-incident classification criteria","Early-warning template + authority contacts"]},
+ {id:"REP-23-02",ref:"Art 23(4)(b)",dom:"reporting",ob:"Incident notification within 72 hours with initial severity/impact assessment.",csf:"RS",subs:["RS.CO-02","RS.CO-03","RS.AN-03","RS.MA-04"],iso:["5.24","5.26","5.27","5.5"],ev:["72h notification procedure","Impact/IoC assessment template"],pbc:["72h notification procedure & template","Impact/IoC capture template","Sample 72h notification"]},
+ {id:"REP-23-03",ref:"Art 23(4)(c)",dom:"reporting",ob:"Intermediate status report on request of the CSIRT/authority while an incident is ongoing.",csf:"RS",subs:["RS.CO-02","RS.CO-03","RS.MA-04"],iso:["5.24","5.26","5.5"],ev:["Procedure for intermediate updates","Status-report template"],pbc:["Intermediate status-report procedure/template","Evidence of authority liaison during incidents"]},
+ {id:"REP-23-04",ref:"Art 23(4)(d)",dom:"reporting",ob:"Final report within one month — description, root cause, mitigations and cross-border impact.",csf:"RC",subs:["RC.RP-06","RS.AN-08","ID.IM-04","RS.CO-03"],iso:["5.27","5.28","5.24","10.1"],ev:["Final-report procedure/template","Root-cause methodology"],pbc:["Final-report procedure & template","Sample final report","Root-cause methodology","Findings → remediation tracker"]}
+];
+
+/* ===================== STATE + UI ===================== */
+const STEPS=["Engagement","Sector","Size","Group","Two-year","Overrides","Exclusions","Verdict & memo"];
+let groupNodes=[], exclusions=[];
+const $=id=>document.getElementById(id);
+
+function buildNav(){
+  const nav=$("nav");
+  STEPS.forEach((s,i)=>{const b=document.createElement("button");b.innerHTML=`<span class="n">${i}</span>${s}`;b.onclick=()=>go(i);b.id="nav"+i;nav.appendChild(b);});
+}
+function go(i){
+  document.querySelectorAll("section[data-step]").forEach(s=>s.classList.toggle("show",+s.dataset.step===i));
+  document.querySelectorAll("nav.steps button").forEach((b,j)=>b.classList.toggle("active",j===i));
+  recompute();
+}
+function fillSectors(){
+  const sel=$("f_sector");sel.innerHTML="";
+  const og1=document.createElement("optgroup");og1.label="Annex I — high-criticality";
+  ANNEX_I.forEach(s=>og1.appendChild(new Option(s,s)));
+  const og2=document.createElement("optgroup");og2.label="Annex II — other-critical";
+  ANNEX_II.forEach(s=>og2.appendChild(new Option(s,s)));
+  const og3=document.createElement("optgroup");og3.label="Other";og3.appendChild(new Option("Other / not listed","Other"));
+  sel.append(og1,og2,og3);
+}
+function addNode(n){
+  n=n||{name:"Related enterprise",staff:0,turnover:0,balance:0,holding_pct:100,control:""};
+  groupNodes.push(n);renderNodes();recompute();
+}
+function renderNodes(){
+  const box=$("nodes");box.innerHTML="";
+  groupNodes.forEach((n,i)=>{
+    const d=document.createElement("div");d.className="nodeRow";
+    d.innerHTML=`
+      <div><label>Name</label><input value="${n.name}" oninput="groupNodes[${i}].name=this.value;recompute()"></div>
+      <div><label>Staff</label><input type="number" value="${n.staff}" oninput="groupNodes[${i}].staff=+this.value;renderNodes();recompute()"></div>
+      <div><label>Turnover €</label><input type="number" value="${n.turnover}" oninput="groupNodes[${i}].turnover=+this.value;recompute()"></div>
+      <div><label>Balance €</label><input type="number" value="${n.balance}" oninput="groupNodes[${i}].balance=+this.value;recompute()"></div>
+      <div><label>Holding %</label><input type="number" value="${n.holding_pct}" oninput="groupNodes[${i}].holding_pct=+this.value;renderNodes();recompute()"></div>
+      <div><label>Control</label><select onchange="groupNodes[${i}].control=this.value;renderNodes();recompute()">
+        <option value=""${n.control===""?" selected":""}>by %</option>
+        <option value="true"${n.control==="true"?" selected":""}>control (linked)</option>
+        <option value="false"${n.control==="false"?" selected":""}>no control</option></select></div>
+      <button class="del" onclick="groupNodes.splice(${i},1);renderNodes();recompute()">✕</button>`;
+    box.appendChild(d);
+  });
+}
+function addExcl(){exclusions.push({item:"",reason:"",basis:""});renderExcls();}
+function renderExcls(){
+  const box=$("excls");box.innerHTML="";
+  exclusions.forEach((e,i)=>{
+    const d=document.createElement("div");d.className="exRow";
+    d.innerHTML=`
+      <div><label>Item (entity/BU/system/geo)</label><input value="${e.item}" oninput="exclusions[${i}].item=this.value;recompute()"></div>
+      <div><label>Reason</label><input value="${e.reason}" oninput="exclusions[${i}].reason=this.value;recompute()"></div>
+      <div><label>Legal basis</label><input value="${e.basis}" oninput="exclusions[${i}].basis=this.value;recompute()"></div>
+      <button class="del" onclick="exclusions.splice(${i},1);renderExcls();recompute()">✕</button>`;
+    box.appendChild(d);
+  });
+}
+function ctrl(v){return v==="true"?true:v==="false"?false:null;}
+
+function gather(){
+  const flags=[...document.querySelectorAll("#flags input:checked")].map(c=>c.value);
+  return {
+    name:$("f_name").value, lei:$("f_lei").value, assessor:$("f_assessor").value, reviewer:$("f_reviewer").value,
+    date:$("f_date").value, window:$("f_window").value,
+    sector:$("f_sector").value, sector_annex:annexOf($("f_sector").value),
+    staff:+$("f_staff").value, turnover:+$("f_turnover").value, balance:+$("f_balance").value,
+    related:groupNodes.map(n=>({name:n.name,staff:+n.staff,turnover:+n.turnover,balance:+n.balance,holding_pct:+n.holding_pct,control:ctrl(n.control)})),
+    prior_band:$("f_prior").value||null, years_breached:+$("f_years").value,
+    special_flags:flags, art2_2_designation:$("f_design").value||null,
+    cross_border_systemic:$("f_xborder").value, n_geographies:+$("f_geo").value, n_entities:+$("f_ent").value,
+    supply_chain:$("f_supply").value, exclusions:exclusions.slice()
+  };
+}
+const money=n=>"€"+Math.round(n).toLocaleString();
+const fmtClass=c=>({essential:"ESSENTIAL",important:"IMPORTANT",out_of_scope:"OUT OF SCOPE",deferred_designation:"DEFERRED (Art 2(2))"}[c]||c);
+
+function recompute(){
+  const st=gather();
+  // live rules
+  $("sectorRule").textContent = st.sector_annex==="I"?"Annex I — high-criticality. Large ⇒ essential; medium ⇒ important.":
+    st.sector_annex==="II"?"Annex II — other-critical. Medium or large ⇒ important (never essential by size).":
+    "Not listed in Annex I/II — out of scope unless an Article 3 / 2(2) override applies.";
+  $("tyRule").textContent = !st.prior_band?"No prior band set — the current period's band applies directly.":
+    `Prior band '${st.prior_band}': a change applies only if sustained ≥2 consecutive periods (currently ${st.years_breached}).`;
+  const res=classifyEntity({sector_annex:st.sector_annex,sector_name:st.sector,
+    root:{name:st.name||"target",staff:st.staff,turnover:st.turnover,balance:st.balance,related:st.related},
+    special_flags:st.special_flags,art2_2_designation:st.art2_2_designation,prior_band:st.prior_band,years_breached:st.years_breached});
+  const special = st.special_flags.length>0 || !!st.art2_2_designation;
+  const prop=proportionality({size_band:res.size_band,entity_class:res.entity_class,sector_annex:st.sector_annex,
+    cross_border_systemic:st.cross_border_systemic,n_geographies:st.n_geographies,n_entities:st.n_entities,
+    special_entity:special,supply_chain:st.supply_chain});
+  // live panel
+  $("vHead").textContent=fmtClass(res.entity_class);
+  $("vHead").className="head cls-"+res.entity_class;
+  $("vScope").textContent=res.in_scope?"YES":"no";
+  $("vClass").textContent=fmtClass(res.entity_class);
+  $("vBand").textContent=res.size_band;
+  $("vStaff").textContent=res.consolidated.staff.toLocaleString();
+  $("vTier").textContent=res.in_scope?prop.tier:"—";
+  $("vScore").textContent=res.in_scope?`score ${prop.score}/100 (${prop.points.size_band}+${prop.points.entity_class}+${prop.points.sector_annex}+${prop.points.cross_border_systemic}+${prop.points.footprint}+${prop.points.special_entity}+${prop.points.supply_chain})`:"";
+  $("vMeter").style.width=(res.in_scope?prop.score:0)+"%";
+  $("vReason").textContent=res.reason;
+  // aggregation trace
+  $("aggBox").textContent = res.aggregation_trace.length>1 ? aggText(res) : "single autonomous entity — no aggregation (add related enterprises to consolidate).";
+  renderMemo(st,res,prop);
+}
+function aggText(res){
+  let out="Article 6 consolidation\n";
+  res.aggregation_trace.forEach(t=>{
+    if(t.link==="self (root)") out+=`  ${t.node}: staff ${t.staff}, ${money(t.turnover)}, ${money(t.balance)} (root)\n`;
+    else out+=`  + ${t.node} [${t.link} ×${t.mult}]: staff +${t.staff.toFixed(0)}, ${money(t.turnover)}, ${money(t.balance)}\n`;
+  });
+  out+=`  = CONSOLIDATED: staff ${res.consolidated.staff.toLocaleString()}, ${money(res.consolidated.turnover)}, ${money(res.consolidated.balance)} → band '${res.size_band}'`;
+  return out;
+}
+function renderMemo(st,res,prop){
+  const pbc=[];CRITERIA.forEach(c=>c.pbc.forEach(p=>pbc.push({id:c.id,ref:c.ref,csf:c.csf,p})));
+  const flagsHtml=res.flags.map(f=>`<div class="flag">⚑ ${f}</div>`).join("");
+  const exHtml=st.exclusions.filter(e=>e.item).map(e=>`<li><b>${e.item}</b> — ${e.reason||"(no reason)"} <span class="small">[${e.basis||"basis?"}]</span></li>`).join("")||"<li class='small'>None recorded.</li>";
+  const critRows=CRITERIA.map(c=>`<tr><td><b>${c.ref}</b><br><span class="small">${c.id}</span></td><td>${c.ob}</td><td><span class="tag-pill csf">${c.csf}</span> ${c.subs.join(", ")}</td><td class="small">${c.iso.join(", ")}</td></tr>`).join("");
+  const audit=res.audit.map(a=>`<div class="audit">${a}</div>`).join("");
+  const html=`
+    <h3>1 · Identity &amp; engagement</h3>
+    <div class="sec"><b>${st.name||"(entity)"}</b>${st.lei?` · ${st.lei}`:""} — prepared by ${st.assessor||"—"}, reviewed by ${st.reviewer||"—"}${st.date?`, ${st.date}`:""}.</div>
+    <h3>2 · Executive verdict</h3>
+    <div class="sec"><span class="tag-pill cls-${res.entity_class}" style="color:#fff;padding:2px 9px">${fmtClass(res.entity_class)}</span> — ${res.in_scope?"IN SCOPE":"not in scope"}. ${res.reason}.</div>
+    ${flagsHtml}
+    <h3>3 · Evidence window</h3><div class="sec">${st.window||"—"}</div>
+    <h3>4 · Sector</h3><div class="sec">Annex ${st.sector_annex} — ${st.sector||"—"}.</div>
+    <h3>5 · Size (2003/361/EC)</h3>
+    <div class="sec">Standalone: staff ${st.staff.toLocaleString()}, turnover ${money(st.turnover)}, balance ${money(st.balance)}. Effective band: <b>${res.size_band}</b>${res.raw_size_band!==res.size_band?` (raw ${res.raw_size_band}, two-year rule applied)`:""}. Financial limb requires exceeding BOTH turnover and balance.</div>
+    <h3>6 · Group structure &amp; Article 6 aggregation</h3>
+    <div class="sec"><div class="trace">${res.aggregation_trace.length>1?aggText(res):"Single autonomous entity — no aggregation."}</div></div>
+    <h3>7 · Two-year rule (Art 4(2))</h3>
+    <div class="sec">${st.prior_band?`Prior band '${st.prior_band}', ${st.years_breached} consecutive period(s) in the new band.`:"Not engaged — single-period figures govern."}</div>
+    <h3>8 · Classification rule path</h3>${audit}
+    <h3>9 · Exclusions</h3><ul class="pbc">${exHtml}</ul>
+    <h3>10 · Proportionality (Art 21(1))</h3>
+    <div class="sec">${res.in_scope?`Score <b>${prop.score}/100</b> → <b>${prop.tier}</b> tier. Breakdown: size ${prop.points.size_band} + class ${prop.points.entity_class} + annex ${prop.points.sector_annex} + cross-border/systemic ${prop.points.cross_border_systemic} + footprint ${prop.points.footprint} + special ${prop.points.special_entity} + supply-chain ${prop.points.supply_chain} = ${prop.raw_score}.${prop.floors_applied.length?" Floors: "+prop.floors_applied.join("; ")+".":""} The assessment depth and expected control rigor scale to the ${prop.tier} expectation across the six NIST CSF 2.0 functions.`:"Out of scope — proportionality not scored."}</div>
+    <h3>11 · Assessment criteria set (basis of the PBC list)</h3>
+    <div class="sec small">Public criteria keyed to NIS2 prose &amp; NIST CSF 2.0. ISO/IEC 27001:2022 referenced by clause number only (licensed internal crosswalk — no ISO text reproduced).</div>
+    <table><thead><tr><th>NIS2</th><th>Obligation (paraphrased)</th><th>NIST CSF 2.0</th><th>ISO 27001 (clause #)</th></tr></thead><tbody>${critRows}</tbody></table>
+    <h3>12 · Draft PBC request list (${pbc.length} items)</h3>
+    <ul class="pbc">${pbc.map(x=>`<li><span class="small">[${x.ref} · ${x.csf}]</span> ${x.p}</li>`).join("")}</ul>
+    <div class="small" style="margin-top:14px">Generated by Atlas — deterministic, offline. Verdict re-derivable from the JSON input snapshot. Not legal advice; Article 3/2(2) and multi-tier group edge cases flagged for human review.</div>`;
+  $("memo").innerHTML=html;
+  $("memoPrint").innerHTML="<h2>Atlas — NIS2 Scope &amp; Applicability Memo</h2>"+html;
+}
+
+/* ===================== PRESETS / DEMOS ===================== */
+const PRESETS={
+ tso:{label:"National electricity TSO (essential, Critical)",name:"PowerGrid Hellas S.A.",sector:"Energy",staff:5200,turnover:1800000000,balance:1200000000,xborder:"systemic",geo:8,ent:12,supply:"high"},
+ food:{label:"Regional food processor (Annex II, important)",name:"Aegean Foods S.A.",sector:"Production, processing and distribution of food",staff:140,turnover:28000000,balance:15000000,xborder:"none",geo:1,ent:1,supply:"moderate"},
+ sub:{label:"Microenterprise subsidiary of a multinational (linked → large)",name:"NetCo EU B.V.",sector:"Digital infrastructure",staff:20,turnover:2000000,balance:1000000,nodes:[{name:"Global parent Inc.",staff:5000,turnover:1800000000,balance:1200000000,holding_pct:100,control:""}],xborder:"cross_border",geo:3,ent:4,supply:"high"},
+ qtsp:{label:"Tiny qualified trust service provider (size-exempt essential)",name:"TrustSign B.V.",sector:"Digital infrastructure",staff:8,turnover:900000,balance:400000,flags:["qtsp"],xborder:"cross_border",geo:2,ent:1,supply:"moderate"},
+ trap:{label:"The false-positive trap (out of scope)",name:"MidCo Energy B.V.",sector:"Energy",staff:40,turnover:15000000,balance:5000000,xborder:"none",geo:1,ent:1,supply:"low"}
+};
+function fillPresetMenu(){const s=$("preset");Object.entries(PRESETS).forEach(([k,p])=>s.appendChild(new Option(p.label,k)));}
+function setVal(id,v){$(id).value=v;}
+function loadPreset(){
+  const k=$("preset").value;if(!k)return;const p=PRESETS[k];resetAll(true);
+  setVal("f_name",p.name);setVal("f_sector",p.sector);setVal("f_staff",p.staff);setVal("f_turnover",p.turnover);setVal("f_balance",p.balance);
+  setVal("f_xborder",p.xborder||"none");setVal("f_geo",p.geo||1);setVal("f_ent",p.ent||1);setVal("f_supply",p.supply||"low");
+  groupNodes=(p.nodes||[]).map(n=>({...n}));renderNodes();
+  document.querySelectorAll("#flags input").forEach(c=>c.checked=(p.flags||[]).includes(c.value));
+  go(7);
+}
+function loadTrap(){setVal("f_sector","Energy");setVal("f_staff",40);setVal("f_turnover",15000000);setVal("f_balance",5000000);go(2);recompute();}
+function loadSubsidiary(){setVal("f_sector","Digital infrastructure");setVal("f_staff",20);setVal("f_turnover",2000000);setVal("f_balance",1000000);
+  groupNodes=[{name:"Global parent Inc.",staff:5000,turnover:1800000000,balance:1200000000,holding_pct:100,control:""}];renderNodes();go(3);recompute();}
+function resetAll(silent){
+  ["f_name","f_lei","f_assessor","f_reviewer","f_window"].forEach(id=>setVal(id,""));
+  setVal("f_sector",ANNEX_I[0]);setVal("f_staff",0);setVal("f_turnover",0);setVal("f_balance",0);
+  setVal("f_prior","");setVal("f_years",2);setVal("f_design","");setVal("f_xborder","none");setVal("f_geo",1);setVal("f_ent",1);setVal("f_supply","low");
+  document.querySelectorAll("#flags input").forEach(c=>c.checked=false);
+  groupNodes=[];exclusions=[];renderNodes();renderExcls();if(!silent){go(0);recompute();}
+}
+function copyMemo(){navigator.clipboard.writeText($("memo").innerText).then(()=>alert("Memo copied."));}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(gather(),null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="atlas_nis2_snapshot.json";a.click();
+}
+
+/* ===================== ENGINE SELF-TEST (the 32-case catalogue) ===================== */
+function E(name,staff,turnover,balance,holding_pct,control,related){return{name,staff,turnover,balance,holding_pct:holding_pct==null?100:holding_pct,control:control==null?null:control,related:related||[]};}
+const SELFTEST=[
+ ["TC01",{sector_annex:"I",root:E("t",40,15e6,5e6)},false,"out_of_scope"],
+ ["TC02",{sector_annex:"I",root:E("t",49,9e6,9e6)},false,"out_of_scope"],
+ ["TC03",{sector_annex:"I",root:E("t",50,1e6,1e6)},true,"important"],
+ ["TC04",{sector_annex:"I",root:E("t",249,1e6,1e6)},true,"important"],
+ ["TC05",{sector_annex:"I",root:E("t",250,1e6,1e6)},true,"essential"],
+ ["TC06",{sector_annex:"I",root:E("t",30,12e6,8e6)},false,"out_of_scope"],
+ ["TC07",{sector_annex:"I",root:E("t",30,9e6,11e6)},false,"out_of_scope"],
+ ["TC08",{sector_annex:"I",root:E("t",20,11e6,11e6)},true,"important"],
+ ["TC09",{sector_annex:"I",root:E("t",100,60e6,40e6)},true,"important"],
+ ["TC10",{sector_annex:"I",root:E("t",100,60e6,45e6)},true,"essential"],
+ ["TC11",{sector_annex:"I",root:E("sub",10,1e6,1e6,100,null,[E("parent",5000,1.8e9,1.2e9,100)])},true,"essential"],
+ ["TC12",{sector_annex:"I",root:E("t",30,2e6,2e6,100,null,[E("p",100,1e6,1e6,40)])},true,"important"],
+ ["TC13",{sector_annex:"I",root:E("t",30,2e6,2e6,100,null,[E("p",60,1e6,1e6,25)])},false,"out_of_scope"],
+ ["TC14",{sector_annex:"I",root:E("t",55,1e6,1e6),years_breached:1,prior_band:"below_medium"},false,"out_of_scope"],
+ ["TC15",{sector_annex:"I",root:E("t",55,1e6,1e6),years_breached:2,prior_band:"below_medium"},true,"important"],
+ ["TC16",{sector_annex:"I",root:E("t",120,30e6,5e6),special_flags:["ecomms"]},true,"essential"],
+ ["TC17",{sector_annex:"I",root:E("t",4000,800e6,600e6),special_flags:["ecomms"]},true,"essential"],
+ ["TC18",{sector_annex:"I",root:E("t",4,3e5,2e5),special_flags:["qtsp"]},true,"essential"],
+ ["TC19",{sector_annex:"I",root:E("t",8,9e5,4e5),special_flags:["dns"]},true,"essential"],
+ ["TC20",{sector_annex:"I",root:E("t",6,5e5,3e5),special_flags:["tld"]},true,"essential"],
+ ["TC21",{sector_annex:"I",root:E("t",15,2e6,1e6),art2_2_designation:"pending"},false,"deferred_designation"],
+ ["TC22",{sector_annex:"I",root:E("t",15,2e6,1e6),art2_2_designation:"active"},true,"essential"],
+ ["TC23",{sector_annex:"I",root:E("t",20,1e6,1e6),special_flags:["public_admin_central"]},true,"essential"],
+ ["TC24",{sector_annex:"II",root:E("t",5000,900e6,700e6)},true,"important"],
+ ["TC25",{sector_annex:"II",root:E("t",80,20e6,15e6)},true,"important"],
+ ["TC26",{sector_annex:"II",root:E("t",15,2e6,1e6)},false,"out_of_scope"],
+ ["TC27",{sector_annex:"none",root:E("t",5000,900e6,700e6)},false,"out_of_scope"],
+ ["TC28",{sector_annex:"I",root:E("t",300,80e6,60e6)},true,"essential"],
+ ["TC29",{sector_annex:"I",root:E("t",10,1e6,8e5,100,null,[E("s",20,1e6,8e5,100)])},false,"out_of_scope"],
+ ["TC30",{sector_annex:"I",root:E("t",30,12e6,11e6),special_flags:["ecomms"]},true,"essential"],
+ ["TC31",{sector_annex:"I",root:E("t",10,1e6,5e5),special_flags:["ecomms"]},false,"out_of_scope"],
+ ["TC32",{sector_annex:"I",root:E("t",30,2e6,1e6),years_breached:1,prior_band:"large"},true,"essential"]
+];
+function runSelfTest(){
+  let pass=0,fails=[];
+  SELFTEST.forEach(([id,inp,xs,xc])=>{const r=classifyEntity(inp);if(r.in_scope===xs&&r.entity_class===xc)pass++;else fails.push(id);});
+  const el=$("selftest");
+  if(fails.length===0){el.className="badge pass";el.textContent=`engine self-test: ${pass}/${SELFTEST.length} ✓`;}
+  else{el.className="badge fail";el.textContent=`engine self-test: ${pass}/${SELFTEST.length} — FAIL ${fails.join(",")}`;}
+}
+
+/* ===================== INIT ===================== */
+buildNav();fillSectors();fillPresetMenu();renderNodes();renderExcls();
+$("f_sector").value=ANNEX_I[0];
+runSelfTest();recompute();
+document.addEventListener("input",e=>{if(e.target.closest("aside"))return;recompute();});
+document.addEventListener("change",recompute);
+</script>
+</body>
+</html>
