@@ -1,0 +1,10 @@
+{
+  "case_id": "rm21d_01_operating_register",
+  "control_id": "RM-21D-01",
+  "doc_id": "vendor_risk_minutes.txt",
+  "snippet": "Vendor Risk Committee minutes, Q4 2025. The supplier register was reviewed on 12 November 2025; 8 of 9 critical suppliers had a current security assessment on file. Remediation was tracked for the remaining supplier and closed on 5 December 2025.",
+  "expected_facts": [
+    {"evidence_kind": "operating", "quote_contains": "supplier register was reviewed"},
+    {"evidence_kind": "operating", "quote_contains": "current security assessment on file"}
+  ]
+}

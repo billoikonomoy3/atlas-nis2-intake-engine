@@ -1,0 +1,517 @@
+# Atlas NIS2 ruleset — versioned single source of truth for the deterministic engine.
+#
+# This file is DATA. The engine (atlas/engine/*) reads every threshold, weight and
+# criterion from here and hardcodes none of them. Its sha256 is embedded in every
+# exported snapshot so a verdict is re-derivable from the ruleset that produced it.
+#
+# TWO KINDS OF CONTENT, kept visibly separate:
+#   * `statutory:` — what THE LAW determines (scope, class, size, the 2003/361/EC
+#     thresholds, the Art 3 / Art 2(2) overrides). These carry legal force.
+#   * `heuristic_weights:` / `baseline:` / `maturity_ladder:` — what OUR HEURISTIC
+#     suggests (proportionality score, tier, required rung, maturity rungs). These
+#     are consulting conventions with NO statutory force and are tunable. NIS2
+#     prescribes no numeric maturity scale; a rung is never a safe harbour.
+#
+# COPYRIGHT: ISO/IEC 27001:2022 control TEXT is never reproduced. Each criterion's
+# `iso_clauses` is a reference-only list of CLAUSE NUMBERS (a licensed crosswalk
+# pointer). Public criteria are keyed to paraphrased NIS2 prose + NIST CSF 2.0 IDs.
+
+ruleset_version: "nis2_v1"
+ruleset_date: "2026-06-25"
+
+copyright_note: >-
+  ISO/IEC 27001:2022 control text is copyright of ISO and is not reproduced.
+  Public criteria are keyed to NIS2 (paraphrased EU law) and NIST CSF 2.0 (public
+  domain). ISO is referenced by clause number only as a licensed internal
+  crosswalk; resolve the numbers against your own licensed copy.
+
+# ===========================================================================
+# STATUTORY — the law determines.  statutory: true
+# ===========================================================================
+statutory:
+
+  # Commission Recommendation 2003/361/EC.
+  # Staff is a HARD CEILING tested inclusively (>=). The two financial figures are
+  # a SINGLE limb read in the entity's favour: breached only by exceeding BOTH
+  # turnover AND balance, tested strictly (>).
+  size_thresholds:
+    medium_staff: 50
+    medium_turnover_eur: 10000000
+    medium_balance_eur: 10000000
+    large_staff: 250
+    large_turnover_eur: 50000000
+    large_balance_eur: 43000000
+
+  # Ordering used by the override engine — an override can only RAISE the class.
+  class_rank:
+    out_of_scope: 0
+    deferred_designation: 0
+    important: 1
+    essential: 2
+
+  # Article 6 / Reg 2003/361/EC group-link thresholds (statutory, oracle-pinned):
+  # control/linked above linked_min_pct; partner from partner_min_pct..linked_min_pct.
+  group_links:
+    linked_min_pct: 50    # holding_pct > this (strict) OR control=True -> linked (100%)
+    partner_min_pct: 25   # holding_pct >= this -> partner (pro-rata); below -> autonomous (0)
+
+  # NIS2 Annex I (high-criticality) and Annex II (other-critical) — top-level
+  # groupings. VERIFY against the official Annex text before reliance.
+  annex_i_sectors:
+    - Energy
+    - Transport
+    - Banking
+    - Financial market infrastructures
+    - Health
+    - Drinking water
+    - Waste water
+    - Digital infrastructure
+    - ICT service management (B2B)
+    - Public administration
+    - Space
+  annex_ii_sectors:
+    - Postal and courier services
+    - Waste management
+    - Manufacture, production and distribution of chemicals
+    - Production, processing and distribution of food
+    - Manufacturing
+    - Digital providers
+    - Research
+
+  # Article 3 / Article 2(2) special-entity flags.
+  special_flags:
+    # Art 3 — essential regardless of size.
+    size_exempt_essential: [qtsp, tld, dns]
+    # Art 3 — essential ONLY if the size band is medium/large (below-medium NOT rescued).
+    ecomms: ecomms
+    # Art 2(2)/Art 3 — public administration in scope regardless of size
+    # (sub-medium essential class is transposition-dependent -> ASSUMPTION flag).
+    public_admin: [public_admin_central, public_admin_local]
+
+# ===========================================================================
+# HEURISTIC PROPORTIONALITY — our heuristic suggests.  statutory: false
+# NO STATUTORY FORCE. Tunable. Every weight's justification is an open TODO for a
+# human to fill in (see README "Open TODOs"). Do NOT treat as a legal threshold.
+# ===========================================================================
+heuristic_weights:
+  _disclaimer: >-
+    These weights are a transparent consulting heuristic with NO statutory force.
+    NIS2 Art 21(1) is outcomes-based ("appropriate and proportionate"); this score
+    informs, but never replaces, that human judgment. Each weight below needs a
+    documented rationale (open TODO).
+
+  # tier name, inclusive low, inclusive high
+  tiers:
+    - [Foundational, 0, 39]
+    - [Standard, 40, 59]
+    - [Enhanced, 60, 79]
+    - [Critical, 80, 100]
+
+  tier_expectation:
+    Foundational: "Baseline hygiene; lightweight self-attestation + evidence sampling."
+    Standard: "Established documented programme; design review + operating sampling."
+    Enhanced: "Mature risk-driven programme; full controls audit across the six CSF functions."
+    Critical: "Maximal rigor for systemic/sole-national providers; in-depth audit + independent technical & resilience validation."
+
+  size_points: {large: 25, medium: 14, below_medium: 6}
+  class_points: {essential: 25, important: 12, out_of_scope: 0, deferred_designation: 0}
+  annex_points: {I: 15, II: 8, none: 0}
+  xborder_points: {systemic: 15, sole_national: 15, cross_border: 9, none: 0}
+  supply_points: {high: 5, moderate: 3, low: 0}
+  special_entity_points: 5
+
+  # footprint(g,e) = max(G(g), E(e)); each is an ordered (>=threshold -> points) ladder.
+  footprint:
+    geographies: [[7, 10], [4, 7], [2, 4]]
+    entities: [[11, 10], [5, 7], [2, 4]]
+
+  # Score floors (still heuristic): a floor only RAISES the score.
+  floors:
+    essential_min: 60        # essential -> at least Enhanced
+    systemic_min: 80         # systemic / sole_national -> at least Critical
+
+# ===========================================================================
+# BASELINE + MATURITY — our heuristic suggests.  statutory: false
+# ===========================================================================
+baseline:
+  # Required maturity rung per proportionality tier (monotonic). Note: an in-scope
+  # *important* entity can land at Foundational -> required rung L1. That is a
+  # TUNABLE POLICY DECISION, surfaced (not silently "corrected") — see README.
+  required_by_tier: {Foundational: 1, Standard: 2, Enhanced: 3, Critical: 4}
+
+  # Controls whose TOP rungs legitimately need evidence the control actually RAN
+  # (an evidence-sequencing flag, never a legal pass/fail gate). Verified partition
+  # over the 16 ids — disjoint from the 6 that may reach L3 on design alone.
+  operating_critical:
+    - RM-21B-01
+    - RM-21C-01
+    - RM-21E-01
+    - RM-21F-01
+    - RM-21G-01
+    - RM-21I-01
+    - RM-21J-01
+    - REP-23-01
+    - REP-23-02
+    - REP-23-04
+
+# 0..4 maturity ladder (CMMI / NIST-CSF-tier flavoured consulting convention).
+maturity_ladder:
+  - [0, "None", "No credible design evidence; the control as written does not exist."]
+  - [1, "Initial / ad hoc", "Partial design only; documented control incomplete, practice ad hoc."]
+  - [2, "Repeatable (documented)", "Design complete on paper, but no/insufficient proof it ran over the period."]
+  - [3, "Defined (operating)", "Complete design plus substantive operating evidence over the window, not yet measured on a cadence."]
+  - [4, "Managed / measured", "Complete design, strong operating evidence, and active monitoring with metrics."]
+
+# Evidence completeness thresholds feeding the ladder (fractions in [0,1]).
+maturity_thresholds:
+  design_min_for_l1: 0.20    # design < this -> L0
+  design_complete: 1.0       # design < this -> capped at L1
+  operating_min_for_l3: 0.50 # complete design but operating < this -> L2
+  operating_strong: 0.80     # operating >= this AND monitored -> L4 (else L3)
+
+# ===========================================================================
+# CRITERIA REGISTRY — 16 rows (Art 20, Art 21(2)(a)-(j), Art 23(4)(a)-(d)).
+# Migrated verbatim from the verified artifact. iso_clauses are REFERENCE-ONLY.
+# ===========================================================================
+criteria:
+  - id: GOV-20-01
+    ref: "Art 20(1)"
+    domain: governance
+    inherent_criticality: 3
+    csf: GV
+    subcategories: [GV.RM-01, GV.RR-01, GV.OC-03]
+    iso_clauses: ["5.1", "5.2", "5.3", "5.4"]   # reference-only (ISO clause numbers)
+    objective: "Management body approves the cyber risk-management measures & oversees implementation; leadership is accountable and can be held liable."
+    design_evidence:
+      - "Approved cyber risk-management framework / governance charter"
+      - "Signed infosec policy with executive ownership & version history"
+      - "Cyber accountability assigned to a named board member (RACI)"
+    operating_evidence:
+      - "Board minutes approving the measures over the period"
+      - "Records of periodic management reviews on the defined cadence"
+      - "Oversight dashboard / risk-appetite tracking with follow-up"
+    pbc:
+      - "Board minutes evidencing approval & oversight"
+      - "Approved infosec policy with version history"
+      - "Interview: accountable management-body member"
+      - "Governance RACI for cybersecurity"
+
+  - id: GOV-20-02
+    ref: "Art 20(2)"
+    domain: governance
+    inherent_criticality: 3
+    csf: GV
+    subcategories: [GV.RR-02, GV.RR-04, PR.AT-02]
+    iso_clauses: ["6.3", "7.2", "7.3"]
+    objective: "Management-body members undergo cyber training; staff are offered equivalent training."
+    design_evidence:
+      - "Policy mandating recurring board cyber training"
+      - "Executive / board-tailored training curriculum"
+      - "Schedule defining training frequency & audiences"
+    operating_evidence:
+      - "Attendance / completion records for board cyber sessions"
+      - "Evidence leadership training was delivered on schedule"
+      - "Evidence staff awareness training was offered & taken up"
+    pbc:
+      - "Cyber training records for management body"
+      - "Leadership training syllabus"
+      - "Policy mandating recurring training"
+
+  - id: RM-21A-01
+    ref: "Art 21(2)(a)"
+    domain: risk-measures
+    inherent_criticality: 2
+    csf: ID
+    subcategories: [ID.RA-01, ID.RA-05, GV.RM-02, GV.PO-01]
+    iso_clauses: ["5.1", "6.1", "8.8", "5.7"]
+    objective: "Documented policies on risk analysis and information-system security."
+    design_evidence:
+      - "Approved risk-assessment methodology / procedure"
+      - "Information security policy set"
+      - "Documented risk-scoring scale, ownership & treatment rules"
+    operating_evidence:
+      - "Current risk register with scoring, owners, treatment"
+      - "Risk treatment plan tracked over the period"
+      - "Last assessment cycle with management sign-off"
+    pbc:
+      - "Risk methodology + infosec policy"
+      - "Current risk register & treatment plan"
+      - "Evidence of last assessment cycle + sign-off"
+
+  - id: RM-21B-01
+    ref: "Art 21(2)(b)"
+    domain: risk-measures
+    inherent_criticality: 3
+    csf: RS
+    subcategories: [RS.MA-01, RS.AN-03, DE.AE-02, RS.CO-02]
+    iso_clauses: ["5.24", "5.25", "5.26", "5.27", "5.28"]
+    objective: "Incident handling across detection, analysis, containment, response and post-incident review."
+    design_evidence:
+      - "Incident response plan / playbooks with roles & severity"
+      - "Documented detect/analyse/contain/respond/review process"
+      - "Defined escalation & communication structure"
+    operating_evidence:
+      - "Incident log / register showing triage & closure"
+      - "Post-incident reviews with completed lessons-learned"
+      - "IR plan test / tabletop exercise results"
+    pbc:
+      - "Incident response plan and playbooks"
+      - "Incident register (12 months)"
+      - "Sample post-incident review"
+      - "Interview: IR lead / SOC manager"
+
+  - id: RM-21C-01
+    ref: "Art 21(2)(c)"
+    domain: risk-measures
+    inherent_criticality: 2
+    csf: RC
+    subcategories: [RC.RP-01, PR.DS-11, GV.OC-04, RC.CO-03]
+    iso_clauses: ["5.29", "5.30", "8.13", "8.14"]
+    objective: "Business continuity — backup management, disaster recovery and crisis management."
+    design_evidence:
+      - "BCP & DRP with defined RTO/RPO"
+      - "Backup policy (scope, frequency, retention)"
+      - "Crisis management plan with escalation structure"
+    operating_evidence:
+      - "Recent backup-restoration test results"
+      - "Records of the latest BCP/DR exercise"
+      - "Evidence RTO/RPO validated against test performance"
+    pbc:
+      - "BCP, DRP, crisis plan with RTO/RPO"
+      - "Backup policy + latest restore test"
+      - "Results of latest BCP/DR exercise"
+
+  - id: RM-21D-01
+    ref: "Art 21(2)(d)"
+    domain: risk-measures
+    inherent_criticality: 3
+    csf: GV
+    subcategories: [GV.SC-01, GV.SC-06, GV.SC-07, ID.RA-10]
+    iso_clauses: ["5.19", "5.20", "5.21", "5.22"]
+    objective: "Supply-chain security — the security of supplier/service-provider relationships, assessed and contractually required."
+    design_evidence:
+      - "Supplier security policy & third-party risk procedure"
+      - "Supplier criticality-rating & assessment methodology"
+      - "Standard contract / DPA security clauses & right-to-audit"
+    operating_evidence:
+      - "Supplier register with criticality & risk assessments"
+      - "Sample executed contracts with security obligations"
+      - "Supplier assessments / ongoing monitoring over the period"
+    pbc:
+      - "Third-party security policy & procedure"
+      - "Supplier register with risk ratings"
+      - "Sample supplier contracts"
+      - "Interview: vendor risk owner"
+
+  - id: RM-21E-01
+    ref: "Art 21(2)(e)"
+    domain: risk-measures
+    inherent_criticality: 2
+    csf: PR
+    subcategories: [PR.PS-06, ID.RA-01, ID.RA-06, RS.MI-02]
+    iso_clauses: ["8.8", "8.25", "8.28", "8.29"]
+    objective: "Security in acquisition, development & maintenance incl. vulnerability handling & disclosure."
+    design_evidence:
+      - "Secure development lifecycle policy & coding standards"
+      - "Vulnerability management procedure with SLAs"
+      - "Coordinated vulnerability disclosure policy"
+    operating_evidence:
+      - "Recent vulnerability scans with remediation tracking"
+      - "Patch records evidencing SLA adherence"
+      - "Sample remediation tickets closed"
+    pbc:
+      - "SDLC / secure-coding standards"
+      - "Vulnerability procedure + patch SLAs"
+      - "Disclosure policy"
+      - "Recent scan + remediation tracker"
+
+  - id: RM-21F-01
+    ref: "Art 21(2)(f)"
+    domain: risk-measures
+    inherent_criticality: 2
+    csf: ID
+    subcategories: [ID.IM-01, ID.IM-02, GV.OV-01, GV.OV-03]
+    iso_clauses: ["9.1", "9.2", "9.3", "10.2"]
+    objective: "Policies and procedures to assess the effectiveness of the risk-management measures."
+    design_evidence:
+      - "Control-effectiveness / internal-audit programme & schedule"
+      - "Defined KPI/KRI set & management-review ToR"
+      - "Corrective-action / continual-improvement procedure"
+    operating_evidence:
+      - "Recent internal audit reports & review minutes"
+      - "KPI/KRI dashboards with measured performance"
+      - "Corrective-action register tracked to closure"
+    pbc:
+      - "Control-assessment programme & schedule"
+      - "Recent audit reports + review minutes"
+      - "KPI/KRI dashboards"
+      - "Corrective-action register"
+
+  - id: RM-21G-01
+    ref: "Art 21(2)(g)"
+    domain: risk-measures
+    inherent_criticality: 2
+    csf: PR
+    subcategories: [PR.AT-01, PR.AT-02, GV.RR-04]
+    iso_clauses: ["6.3", "8.7", "8.19"]
+    objective: "Basic cyber hygiene and security training for staff."
+    design_evidence:
+      - "Cyber hygiene policy / standards"
+      - "Security awareness programme & curriculum"
+      - "Onboarding security training checklist"
+    operating_evidence:
+      - "Awareness completion records over the period"
+      - "Phishing simulation results & follow-up"
+      - "Hygiene baseline coverage / completion metrics"
+    pbc:
+      - "Cyber hygiene policy/standards"
+      - "Awareness programme + completion records"
+      - "Phishing simulation results"
+
+  - id: RM-21H-01
+    ref: "Art 21(2)(h)"
+    domain: risk-measures
+    inherent_criticality: 2
+    csf: PR
+    subcategories: [PR.DS-01, PR.DS-02, PR.DS-10]
+    iso_clauses: ["8.24", "5.10", "8.1"]
+    objective: "Policies on cryptography and, where appropriate, encryption."
+    design_evidence:
+      - "Cryptography / encryption policy with approved algorithms"
+      - "Key management procedure (gen/store/rotate/revoke)"
+      - "Documented encryption-at-rest & in-transit requirements"
+    operating_evidence:
+      - "Evidence of encryption enforced on critical systems"
+      - "Recent crypto config / TLS scan reports"
+      - "Records of key rotation / revocation events"
+    pbc:
+      - "Cryptography/encryption policy"
+      - "Key-management procedure"
+      - "Encryption evidence for critical systems"
+
+  - id: RM-21I-01
+    ref: "Art 21(2)(i)"
+    domain: risk-measures
+    inherent_criticality: 2
+    csf: PR
+    subcategories: [PR.AA-01, PR.AA-05, ID.AM-01, ID.AM-02]
+    iso_clauses: ["6.1", "6.5", "5.15", "5.18", "5.9"]
+    objective: "Human-resources security, access control and asset management."
+    design_evidence:
+      - "Access control & joiner/mover/leaver procedure"
+      - "Asset management policy (inventory scope & ownership)"
+      - "HR screening & privileged-access requirements"
+    operating_evidence:
+      - "Asset inventory populated with owners"
+      - "Access-review / recertification records"
+      - "HR screening & confidentiality-agreement evidence"
+    pbc:
+      - "Access control + joiner/mover/leaver procedure"
+      - "Asset inventory with owners"
+      - "Access-recertification records"
+      - "HR screening evidence"
+
+  - id: RM-21J-01
+    ref: "Art 21(2)(j)"
+    domain: risk-measures
+    inherent_criticality: 2
+    csf: PR
+    subcategories: [PR.AA-03, PR.AA-05, PR.DS-02, PR.IR-01]
+    iso_clauses: ["8.5", "8.3", "8.24", "8.20"]
+    objective: "MFA / continuous auth, secured voice/video/text, and secured emergency communications."
+    design_evidence:
+      - "MFA / authentication policy (where required)"
+      - "Secured voice/video/text communication standards"
+      - "Emergency / out-of-band comms plan & contact tree"
+    operating_evidence:
+      - "MFA / conditional-access config on critical systems"
+      - "Evidence secured comms tooling deployed & used"
+      - "Emergency comms testing records"
+    pbc:
+      - "MFA/authentication policy + config"
+      - "Secured comms tooling evidence"
+      - "Emergency / out-of-band comms plan"
+
+  - id: REP-23-01
+    ref: "Art 23(4)(a)"
+    domain: reporting
+    inherent_criticality: 3
+    csf: RS
+    subcategories: [RS.CO-02, RS.MA-01, RS.AN-03]
+    iso_clauses: ["5.24", "5.25", "5.5", "5.6"]
+    objective: "Early warning to CSIRT/authority within 24h of awareness of a significant incident."
+    design_evidence:
+      - "Reporting procedure with 24h early-warning trigger & correct authority"
+      - "Significant-incident classification criteria"
+      - "Early-warning template & CSIRT/authority contacts"
+    operating_evidence:
+      - "Evidence of an early warning submitted within 24h"
+      - "Exercise testing the early-warning pathway & timing"
+      - "Records responders were briefed on trigger & recipient"
+    pbc:
+      - "Reporting procedure (24h early warning)"
+      - "Significant-incident classification criteria"
+      - "Early-warning template + authority contacts"
+
+  - id: REP-23-02
+    ref: "Art 23(4)(b)"
+    domain: reporting
+    inherent_criticality: 3
+    csf: RS
+    subcategories: [RS.CO-02, RS.CO-03, RS.AN-03, RS.MA-04]
+    iso_clauses: ["5.24", "5.26", "5.27", "5.5"]
+    objective: "Incident notification within 72h with an initial severity/impact assessment."
+    design_evidence:
+      - "Procedure detailing 72h notification content"
+      - "Impact / IoC assessment template"
+      - "Internal timeline / RACI for the notification"
+    operating_evidence:
+      - "Sample 72h notification or documented exercise"
+      - "Completed impact / IoC assessment"
+      - "Evidence approval workflow ran within deadline"
+    pbc:
+      - "72h notification procedure & template"
+      - "Impact/IoC capture template"
+      - "Sample 72h notification"
+
+  - id: REP-23-03
+    ref: "Art 23(4)(c)"
+    domain: reporting
+    inherent_criticality: 3
+    csf: RS
+    subcategories: [RS.CO-02, RS.CO-03, RS.MA-04]
+    iso_clauses: ["5.24", "5.26", "5.5"]
+    objective: "Intermediate status report on request of the CSIRT/authority while an incident is ongoing."
+    design_evidence:
+      - "Procedure for intermediate updates on authority request"
+      - "Intermediate status-report template"
+      - "Defined liaison cadence & ownership"
+    operating_evidence:
+      - "Evidence of authority liaison during a live incident"
+      - "Records of intermediate reports produced on request"
+      - "Exercise testing the update cadence"
+    pbc:
+      - "Intermediate status-report procedure/template"
+      - "Evidence of authority liaison during incidents"
+
+  - id: REP-23-04
+    ref: "Art 23(4)(d)"
+    domain: reporting
+    inherent_criticality: 3
+    csf: RC
+    subcategories: [RC.RP-06, RS.AN-08, ID.IM-04, RS.CO-03]
+    iso_clauses: ["5.27", "5.28", "5.24", "10.1"]
+    objective: "Final report within one month — description, root cause, mitigations and cross-border impact."
+    design_evidence:
+      - "Final-report procedure / template (root cause, mitigations, cross-border)"
+      - "Root-cause analysis methodology"
+      - "Documented linkage from findings to control improvements"
+    operating_evidence:
+      - "Sample final report submitted within one month"
+      - "Completed root-cause analysis"
+      - "Tracker of final-report actions to remediation"
+    pbc:
+      - "Final-report procedure & template"
+      - "Sample final report"
+      - "Root-cause methodology"
+      - "Findings → remediation tracker"

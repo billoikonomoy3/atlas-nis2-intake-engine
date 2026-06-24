@@ -7,3 +7,8 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+
+# Test / coverage artifacts
+.coverage
+coverage.xml
+.pytest_cache/
