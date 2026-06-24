@@ -4,7 +4,7 @@
     {
       "name": "atlas",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8765"],
+      "runtimeArgs": ["-m", "uvicorn", "atlas.api.main:app", "--host", "127.0.0.1", "--port", "8765"],
       "port": 8765
     }
   ]

@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atlas-nis2"
+version = "2.0.0"
+description = "Atlas — NIS2 readiness engine: deterministic Stage-3 -> compliance-baseline core with a cited, model-assisted document-extraction slice."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+dependencies = [
+    "pydantic>=2.6",
+    "pyyaml>=6.0",
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+    "python-multipart>=0.0.9",
+    "pypdf>=4.0",
+    "python-docx>=1.1",
+]
+
+[project.optional-dependencies]
+# Extraction layer (model calls) — NOT required to run the deterministic core or tests.
+extraction = ["anthropic>=0.40", "httpx>=0.27"]
+dev = ["pytest>=8.0", "coverage>=7.4", "httpx>=0.27"]
+
+[tool.setuptools.packages.find]
+include = ["atlas*"]
+
+[tool.pytest.ini_options]
+# Make `import atlas` work without an editable install; keep tests offline.
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,2 +1,13 @@
-# Atlas NIS2 Scope Checker - no third-party dependencies (standard library only).
-# This file's presence tells the build system (Railway/Nixpacks) to use Python.
+# Atlas runtime dependencies (Railway / Nixpacks reads this to select Python).
+# The deterministic core needs only pydantic + pyyaml; the API adds fastapi/uvicorn;
+# ingestion adds pypdf/python-docx. The extraction model client (anthropic) is an
+# OPTIONAL extra — install it only where you set ANTHROPIC_API_KEY.
+pydantic>=2.6
+pyyaml>=6.0
+fastapi>=0.110
+uvicorn>=0.27
+python-multipart>=0.0.9
+pypdf>=4.0
+python-docx>=1.1
+# Optional, extraction layer only:
+# anthropic>=0.40

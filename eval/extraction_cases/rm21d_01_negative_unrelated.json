@@ -1,0 +1,7 @@
+{
+  "case_id": "rm21d_01_negative_unrelated",
+  "control_id": "RM-21D-01",
+  "doc_id": "facilities_note.txt",
+  "snippet": "Facilities update: the office HVAC system was serviced this quarter and the coffee machines were replaced. Parking permits renew in January. Nothing in this note concerns information security or suppliers.",
+  "expected_facts": []
+}

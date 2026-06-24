@@ -1,89 +1,167 @@
-# Atlas — NIS2 Stage-3 Intake & Compliance-Baseline Engine
+# Atlas — NIS2 readiness engine
 
-Turns a generic directive into a **specific, finite, defensible checklist for *this* client** —
-from user-provided facts alone, before a single document is requested:
+![CI](https://github.com/billoikonomoy3/atlas-nis2-intake-engine/actions/workflows/ci.yml/badge.svg)
 
-> applicability & classification → assessment scope → tailored criteria set →
-> proportionality → **the minimum compliance bar per control** → jurisdiction & clocks → draft PBC list.
+A deterministic **Stage-3 → compliance-baseline** engine for NIS2 (Directive (EU)
+2022/2555), with a **cited, model-assisted document-extraction slice** for one control
+end-to-end (`RM-21D-01`, supply-chain security, Art 21(2)(d)).
 
-Offline, deterministic, audit-grade. No LLM, no network, no external libraries — the whole
-demo is **one self-contained HTML file** that runs from a USB stick in a client room or from the
-Railway deployment unchanged.
+> From user facts alone: **applicability & classification → proportionality → the
+> minimum maturity bar per control → jurisdiction & clocks**; then, for the slice,
+> **PDF in → cited facts → deterministic level → gap vs the bar → a cited finding.**
 
-## Why this exists (and what the v1 toy got wrong)
+Everything that decides the law is pure, offline, reproducible code. A model is used in
+**one place only** — locating and quoting evidence inside documents. A model never
+assigns a maturity level or a verdict.
 
-A naive scope checker uses the practitioner shorthand "≥50 staff **OR** ≥€10m turnover". That
-produces **negligent verdicts**. This engine encodes the real Stage-3 logic explicitly:
+---
 
-| Trap | Naive tool | Atlas |
-|---|---|---|
-| **Size test** | staff OR turnover | Staff is a hard ceiling (≥); the two financials are **one limb read in the entity's favour** — breached only by exceeding **BOTH** turnover AND balance sheet (>). 2003/361/EC. |
-| **40 staff / €15m turnover / €5m balance** | wrongly *in scope* | correctly **small / out of scope** (balance only €5m) — the canonical false-positive trap, pinned by a regression test |
-| **Group structure** | ignored | **Article 6 recursive aggregation**: +100% of linked (controlled) enterprises, pro-rata of partners (25–50%), consolidated down the whole tree — a subsidiary of a multinational is never a microenterprise |
-| **One anomalous year** | flips scope | **Article 4(2) two-year rule**: a band change only takes effect across two consecutive periods |
-| **Article 3 carve-outs** | silently deferred | **encoded**: QTSP/DNS/TLD = essential at any size; medium/large e-comms = essential (not merely important); Art 2(2) designation = essential at any size (or held *pending* the act); central-/local-government bodies in scope regardless of size |
+## The two boundaries that define this system
 
-## What's new beyond a scope checker — the pre-PBC "map"
+### 1. The law determines vs. our heuristic suggests
 
-The point of getting Stage 3 right is that everything downstream is measured against it. So Atlas
-pre-computes, **before any evidence arrives**, everything that makes the post-PBC assessment mechanical:
+Every output separates what the **law determines** from what **our heuristic suggests**,
+and the split is encoded in the schema itself (`statutory: true` vs
+`statutory: false, heuristic: true, tunable: true` on every field).
 
-- **Verdict & sensitivity** — the verdict, plus *what would flip it*: live distance to every size
-  threshold and the single binding constraint. Teaches the trap (the financial limb needs **both** figures).
-- **Compliance baseline** — the **minimum maturity rung every in-scope control must clear**, derived from
-  the proportionality tier; the exact evidence that proves it; `operating-critical` / governance-liability /
-  reporting-clock flags; and a **tier-sweep matrix** of the bar across all parameters (Foundational→L1 … Critical→L4).
-- **Jurisdiction & clocks** — Netherlands / Cbw governing law by date, the named supervisor for the sector,
-  the 24h / 72h / 1-month Art 23 reporting clocks, the three Dutch duties, and the Art 20 personal-liability vector.
-- **Prioritised, bar-tagged PBC list**, a traced printable scope memo, and a JSON snapshot export.
-
-## What's in the box
-
-| File | Role |
+| THE LAW DETERMINES (statutory) | OUR HEURISTIC SUGGESTS (no statutory force, tunable) |
 |---|---|
-| `atlas_nis2_intake.html` | **The demoable artifact.** Single self-contained file — stepper UI, live verdict + sensitivity, group-tree builder, derived compliance baseline, jurisdiction pack, traced scope memo, prioritised PBC list, print-to-PDF + JSON export. Embeds a faithful JS port of the engine and runs a **32-case self-test on load** (green badge). |
-| `scope.py` | Stage-3 gold layer: recursive Article 6 aggregation, size band, two-year rule, classification + Article 3/2(2) overrides. Pure functions, full audit trail per verdict. |
-| `criteria.py` | NIS2 Art 20 / 21(2)(a–j) / 23 → NIST CSF 2.0 criteria set (16 rows), 0–4 maturity, evidence, PBC items; transparent additive proportionality model. |
-| `assess.py` | Stage 4–7 maturity engine: the 0–4 ladder, the proportionate **required rung** per tier, gap + likelihood×impact risk, and a deterministic EQCR challenger. Source of the compliance-baseline logic. |
-| `jurisdiction.py` | Netherlands (Cbw) overlay: governing law by date, supervisor routing (RDI / IGJ / DNB+AFM, honest TBD elsewhere), the three duties, dual incident reporting, registratieplicht check. |
-| `economics.py` | The pyramid economics — what the Stage 4–7 first pass costs in junior hours vs Atlas at ~€0, one hand-re-derivable chain. |
-| `test_scope.py` / `test_assess.py` | Test catalogues proving the engines correct (`32 passed`; 6 assess/jurisdiction/economics groups). |
-| `server.py` / `Procfile` | Minimal stdlib static server (serves only the artifact); Railway-ready. |
+| in scope? essential / important? | proportionality score (0–100) |
+| size band (2003/361/EC) | proportionality tier (Foundational … Critical) |
+| Article 6 consolidation | required maturity rung per control |
+| Article 4(2) two-year rule | 0–4 maturity ladder & achieved level |
+| Article 3 / 2(2) overrides | gap vs the bar |
+| supervisor routing, Art 23 clocks | — |
 
-The HTML is a self-contained port; the Python modules are the tested source of truth (the "gold layer").
+NIS2 Art 21(1) is **outcomes-based** ("appropriate and proportionate"); the heuristic
+**informs, never replaces** that judgment. A maturity rung is **not** a statutory safe
+harbour. Every artefact is stamped **DRAFT — REQUIRES REVIEW**.
 
-## Two decisions that make it defensible (interview talking points)
+### 2. The LLM-only-in-extraction guarantee
 
-1. **Correctness of the size logic is the whole game.** A wrong applicability verdict is a negligent
-   verdict. The boolean logic, group aggregation, two-year rule, and Article 3 overrides are encoded
-   explicitly and pinned by 32 tests — *and the verdict ships with its own audit trail*, so every
-   conclusion is re-derivable, not asserted.
+```
+                         ┌───────────────────────── judgment path: NO MODEL ───────────────────────────┐
+  user facts ─▶ validate ─▶ classify ─▶ proportionality ─▶ baseline (bar) ─▶ score_control ─▶ Finding
+  (INSUFFICIENT_INPUT on bad numerics)                                            ▲
+                                                                                  │ ExtractedFact[]
+  documents ─▶ ingest (offline) ─▶ extract  ── MODEL (locate + quote only) ──────┘
+                                   (provenance enforced; facts w/o source_quote discarded)
+```
 
-2. **ISO/IEC 27001 control text is copyrighted by ISO — so it is never reproduced.** The public-facing
-   criteria are keyed only to (a) paraphrased **NIS2** prose (EU law) and (b) **NIST CSF 2.0**
-   function/subcategory IDs (US Government, public domain). ISO is referenced by **clause number only**
-   (e.g. `8.16`) as a *licensed internal crosswalk* — a factual pointer a licensed user can resolve,
-   carrying no protected expression.
+The deterministic core and the **entire test suite run fully offline**; CI is given no
+API key, which is the proof. The extraction endpoints **fail closed (503)** without a
+key — they never fabricate facts.
+
+**Provenance is enforced at every ingress, not just during extraction.** A fact's
+quote must actually appear in its cited chunk and the cited `(doc_id, page)` must
+exist, or the fact is dropped. This check runs inside `/extract` *and* again at the
+public `/score` and `/snapshot` boundary: caller-supplied facts must carry their source
+`chunks` for re-verification, and facts without verifiable provenance are **refused
+(422)** — a fabricated quote can never become cited evidence in a finding or a hashed
+snapshot. The safe end-to-end path is `/assess/control` (extract → score in one step).
+
+---
+
+## Architecture (text diagram)
+
+```
+atlas/
+  ruleset/nis2_v1.yaml          versioned single source of truth (thresholds, weights,
+                                16-criteria registry); sha256 stamped into every snapshot
+  atlas/
+    engine/
+      ruleset.py                load YAML, compute sha256, expose version
+      models.py                 Pydantic schemas (one schema for API + tests; law/heuristic tags)
+      validate.py               bad numerics -> INSUFFICIENT_INPUT (never a silent verdict)
+      classify.py               Art 6 consolidation, size band, two-year rule, overrides  [STATUTORY]
+      proportionality.py        additive weighted score -> tier                            [HEURISTIC]
+      baseline.py               required rung per control from tier                        [HEURISTIC]
+      scoring.py                facts -> maturity level -> cited Finding (NO model)         [HEURISTIC]
+      snapshot.py               content_sha256 over everything except generated_at
+    extraction/
+      ingest.py                 PDF/DOCX/TXT -> page-tagged chunks (offline)
+      extract.py                MODEL: locate + quote evidence (schema-locked, provenance-checked)
+    jurisdiction.py             NL · Cbw overlay: supervisor routing, three duties, clocks
+    api/main.py                 FastAPI: /classify /extract /score /assess/control /snapshot /version
+    service.py                  validate -> classify -> proportionality -> bar -> score (offline)
+  tests/                        32-case oracle + validation + proportionality + baseline + scoring + determinism + api + extraction
+  eval/                         labelled extraction cases + precision/recall/provenance harness
+  frontend/index.html           rewired to the API; the engine is NOT duplicated here
+```
+
+**One source of truth for the law.** The deterministic engine exists in exactly one
+place (`atlas/engine`). The frontend calls the API; it embeds no engine.
+
+---
 
 ## Run it
 
 ```bash
-python test_scope.py     # prove the Stage-3 engine: 32 passed
-python test_assess.py    # prove the assessment/jurisdiction/economics layer
-python scope.py          # quick CLI demo (trap + subsidiary)
-python criteria.py       # criteria coverage + a proportionality example
-python server.py         # serve the artifact at http://localhost:8765
+pip install -e ".[dev]"        # core + test deps (offline)
+pytest -q                       # 32-case oracle + validation + proportionality + baseline + scoring + determinism + api + extraction
+
+uvicorn atlas.api.main:app --reload   # serve the API + frontend at http://localhost:8000
+python eval/run_eval.py               # offline extraction eval (baseline)
+python eval/run_eval.py --live        # real model (needs ANTHROPIC_API_KEY)
 ```
 
-Then open **`atlas_nis2_intake.html`** in a browser for the full interactive demo, or use the
-**Load a worked scenario** menu on the engagement screen.
+The extraction slice (`/extract`, `/assess/control`) needs `ANTHROPIC_API_KEY`. Without
+it the core, the API's deterministic endpoints, the frontend's classification, and all
+tests still work — only cited extraction is unavailable, and it fails closed.
 
-## Honest limitations (flagged in-tool for human review)
+### Re-derive a snapshot from its JSON (reproducibility is literal)
 
-First-pass triage, not legal advice; every output is marked **DRAFT — REQUIRES REVIEW**. The 0–4 ladder
-and the tiers are consulting conventions — NIS2 prescribes no numeric maturity scale and a rung is never a
-statutory safe harbour. The "central-government ⇒ essential" class is transposition-dependent; deep
-partner-of-partner chaining and mixed-sector entities are flagged for manual review; sector lists are
-top-level Annex groupings to verify against the official text. The Netherlands overlay is precise as of
-24 June 2026 (Cbw, dossier 36.764, not yet in force). The tool defers what it should defer — and says so
-on the face of the memo.
+Every snapshot embeds `engine_version`, `ruleset_version`, `ruleset_sha256`,
+`generated_at`, and a `content_sha256` taken over **everything except `generated_at`**.
+To verify a snapshot is genuine:
+
+1. load `snapshot.inputs`;
+2. re-run the engine (`POST /snapshot`, or `atlas.service.run_snapshot`) with the same
+   `generated_at`;
+3. assert the recomputed `content_sha256` equals the snapshot's.
+
+Same inputs → byte-identical content and hash. (`tests/test_determinism.py` pins this.)
+
+---
+
+## Copyright
+
+**ISO/IEC 27001:2022 control text is never reproduced.** Each criterion lists ISO
+**clause numbers only** (e.g. `5.19`, `8.16`) as a licensed crosswalk pointer carrying no
+protected expression — resolve them against your own licensed copy. Public criteria are
+keyed to paraphrased **NIS2** prose (EU law) and **NIST CSF 2.0** identifiers (US
+Government, public domain).
+
+---
+
+## Open TODOs (for a human — deliberately not invented)
+
+The heuristic weights and one baseline policy are **judgment calls with no statutory
+force**. They must be justified by a person, not by this tool:
+
+- [ ] **Proportionality weight rationale.** For each weight in
+  `ruleset/nis2_v1.yaml › heuristic_weights` (size 25/14/6, class 25/12, annex 15/8,
+  cross-border 15/9, supply 5/3, special-entity 5, footprint ladders, and the
+  essential→60 / systemic→80 floors), document *why that number*. They are tunable and
+  currently carry **no documented justification** — `TODO: REVIEW`.
+- [ ] **Foundational / L1 for in-scope `important` entities.** The monotonic
+  tier→rung map (`Foundational→L1 … Critical→L4`) means an in-scope *important* entity at
+  the Foundational tier gets a required rung of **L1**. This is **surfaced, not silently
+  corrected** (`tests/test_baseline.py::test_important_can_sit_at_foundational_l1_policy_artifact`).
+  Decide whether that floor is the intended policy or should be raised — `TODO: REVIEW`.
+- [ ] **Maturity L4 from documents.** The facts-only scorer tops out at **L3**: the basic
+  extracted-fact schema carries no "monitoring/metrics on a cadence" signal, so "Managed
+  / measured" cannot be proven from policy documents alone. Extend the schema if L4 must
+  be reachable from evidence — `TODO: REVIEW`.
+- [ ] **Sector & supervisor coverage.** Annex sector lists are top-level groupings to
+  verify against the official Annex text; supervisor routing asserts a name only where
+  the source names one (RDI / IGJ / DNB+AFM) and is otherwise `TBD` → human review.
+
+---
+
+## Scope of this run
+
+Depth on **one control end-to-end** (`RM-21D-01`) before breadth. No DORA / CSRD /
+multi-regulation work, and no extra controls were added. The Netherlands overlay is
+precise as of **25 June 2026** (Cbw, dossier 36.764, **not yet in force** — the Wbni
+still governs).

@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas — NIS2 Stage-3 Intake & Compliance-Baseline Engine</title>
+<style>
+  :root{
+    --navy:#0d2238; --navy2:#13324f; --teal:#1f8a8a; --accent:#2f6fed; --accent2:#0ea5a5;
+    --ink:#16222e; --muted:#5b6b7b; --dim:#8595a4; --line:#e3e9f0; --bg:#eef2f6; --card:#ffffff;
+    --ess:#c0392b; --imp:#2f6fbf; --out:#7a8794; --def:#7d4fbf;
+    --l0:#9b2226; --l1:#bb6b00; --l2:#a07400; --l3:#1e7a46; --l4:#0d6e6e;
+    --ok:#1e8e54; --warn:#b8860b; --gold:#c79100; --law:#13324f; --heur:#8a6500;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);
+    background:radial-gradient(1100px 520px at 88% -8%,#e7eef7 0,transparent 60%),var(--bg)}
+  header{position:sticky;top:0;z-index:30;background:linear-gradient(100deg,var(--navy),var(--navy2));color:#fff;
+    padding:12px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 2px 14px rgba(13,34,56,.18)}
+  header .brand{font-size:19px;font-weight:800}
+  header .brand span{color:#5fd0d0}
+  header .brand small{display:block;font-size:10px;font-weight:700;color:#8fb0cc;letter-spacing:.7px;text-transform:uppercase;margin-top:1px}
+  header .tag{color:#b9c8d6;font-size:12px;flex:1;min-width:180px;line-height:1.4}
+  .stamp{font-size:10px;font-weight:800;letter-spacing:.7px;color:#241a00;background:var(--gold);padding:4px 9px;border-radius:5px;white-space:nowrap}
+  .badge{font-size:11px;padding:5px 10px;border-radius:20px;font-weight:700;white-space:nowrap;background:#0d3a26;color:#7be0a8;border:1px solid #1e8e54}
+  .wrap{max-width:1280px;margin:0 auto;padding:18px 22px;display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+  @media(max-width:960px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(16,34,56,.05)}
+  .card h2{margin:0 0 4px;font-size:17px;color:var(--navy)}
+  .card .sub{color:var(--muted);font-size:12.5px;margin-bottom:14px;line-height:1.5}
+  label{display:block;font-weight:600;font-size:12px;color:var(--muted);margin:11px 0 4px}
+  input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+  input:focus,select:focus{outline:2px solid #cfe0fb;border-color:var(--accent)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .chk{display:flex;gap:7px;align-items:center;padding:7px 9px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600}
+  .chk input{width:auto}
+  .btn{all:unset;cursor:pointer;background:var(--accent);color:#fff;padding:9px 15px;border-radius:8px;font-weight:700;font-size:12.5px;text-align:center;display:inline-block}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.ghost{background:#eef3fb;color:var(--navy);border:1px solid var(--line)}
+  .btn.gold{background:var(--gold);color:#241a00}
+  .footerbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  /* law / heuristic split */
+  .split{display:flex;gap:8px;align-items:center;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+  .lawband{border-left:4px solid var(--law);background:#f1f6fb;border-radius:0 9px 9px 0;padding:12px 14px;margin-bottom:12px}
+  .heurband{border-left:4px solid var(--heur);background:#fdf8ec;border-radius:0 9px 9px 0;padding:12px 14px;margin-bottom:12px}
+  .lawtag{color:#fff;background:var(--law);padding:2px 8px;border-radius:5px}
+  .heurtag{color:#241a00;background:var(--gold);padding:2px 8px;border-radius:5px}
+  .kv{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+  .kv:last-child{border:0}.kv b{font-weight:800}
+  .pill{display:inline-block;padding:2px 10px;border-radius:11px;font-size:11px;font-weight:800;color:#fff}
+  .cls-essential{background:linear-gradient(100deg,#9b2424,#c0392b)}.cls-important{background:linear-gradient(100deg,#1f5394,#2f6fbf)}
+  .cls-out_of_scope{background:#5e6b78}.cls-deferred_designation{background:linear-gradient(100deg,#5e3a93,#7d4fbf)}
+  .lvbadge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;color:#fff;display:inline-block}
+  .lv0{background:var(--l0)}.lv1{background:var(--l1)}.lv2{background:var(--l2)}.lv3{background:var(--l3)}.lv4{background:var(--l4)}
+  .audit{font-size:11.5px;border-left:3px solid var(--teal);padding:3px 0 3px 10px;margin:4px 0;color:#2b4a4a}
+  .flag{background:#fff7e6;border:1px solid #f0d49a;border-radius:8px;padding:7px 10px;font-size:11.5px;color:#7a5600;margin-top:6px}
+  .ev{border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin:7px 0;background:#fafcff;font-size:12px}
+  .ev .q{font-style:italic;color:#26405a;border-left:3px solid var(--accent);padding-left:8px;margin:3px 0}
+  .ev .src{font-size:10.5px;color:var(--dim);font-weight:700}
+  .ek-design{color:#2f6fbf}.ek-operating{color:#1e7a46}
+  .drop{border:2px dashed #b8c8da;border-radius:10px;padding:18px;text-align:center;color:var(--muted);font-size:12.5px;background:#f7fafe;cursor:pointer}
+  .drop.over{border-color:var(--accent);background:#eef4ff}
+  .msg{font-size:12px;padding:8px 11px;border-radius:8px;margin-top:10px}
+  .msg.err{background:#fdeceb;color:#9b2226;border:1px solid #f1c3bf}
+  .msg.warn{background:#fff7e6;color:#7a5600;border:1px solid #f0d49a}
+  .msg.ok{background:#eaf6ef;color:#1e6e44;border:1px solid #bfe3cd}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid #cfe0fb;border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .legend{font-size:11px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;margin-top:4px}
+  .legend b{color:var(--law)} .legend i{color:var(--heur);font-style:normal;font-weight:800}
+  .note{font-size:11px;color:var(--dim);margin-top:10px;line-height:1.5}
+  code{background:#eef2f6;padding:1px 5px;border-radius:4px;font-size:11.5px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Atlas<span>.</span><small>NIS2 readiness engine</small></div>
+  <div class="tag">Deterministic Stage-3 → compliance-baseline. <b style="color:#cfe0ee">No LLM in the judgment path</b> — a model runs only in document extraction.</div>
+  <span class="stamp">DRAFT — REQUIRES REVIEW</span>
+  <span id="ver" class="badge">engine …</span>
+</header>
+
+<div class="wrap">
+  <!-- ===================== LEFT: intake ===================== -->
+  <div>
+    <div class="card">
+      <h2>1 · Entity facts</h2>
+      <div class="sub">From user-provided facts only. Malformed financials return <code>INSUFFICIENT_INPUT</code> — never a confident verdict.</div>
+      <label>Sector (Annex)</label>
+      <select id="annex">
+        <option value="I">Annex I — high-criticality (Energy, Health, Digital infra…)</option>
+        <option value="II">Annex II — other critical (Manufacturing, Food, Research…)</option>
+        <option value="none">Not a covered sector</option>
+      </select>
+      <label>Sector name (optional)</label>
+      <input id="sector_name" placeholder="e.g. Energy">
+      <div class="grid3">
+        <div><label>Staff (headcount)</label><input id="staff" type="number" value="300"></div>
+        <div><label>Turnover € / yr</label><input id="turnover" type="number" value="80000000"></div>
+        <div><label>Balance sheet €</label><input id="balance" type="number" value="60000000"></div>
+      </div>
+      <label>Article 3 / 2(2) special flags</label>
+      <div class="chips" id="flags">
+        <label class="chk"><input type="checkbox" value="qtsp">QTSP</label>
+        <label class="chk"><input type="checkbox" value="dns">DNS</label>
+        <label class="chk"><input type="checkbox" value="tld">TLD registry</label>
+        <label class="chk"><input type="checkbox" value="ecomms">Public e-comms</label>
+        <label class="chk"><input type="checkbox" value="public_admin_central">Public admin (central)</label>
+      </div>
+      <div class="grid3">
+        <div><label>Art 2(2) designation</label><select id="art22"><option value="">none</option><option value="active">active</option><option value="pending">pending</option></select></div>
+        <div><label>Prior size band</label><select id="prior"><option value="">none</option><option>below_medium</option><option>medium</option><option>large</option></select></div>
+        <div><label>Years breached</label><input id="years" type="number" value="2"></div>
+      </div>
+      <div class="footerbtns">
+        <button class="btn" onclick="classify()">Classify →</button>
+        <button class="btn ghost" onclick="trap()">Load the false-positive trap</button>
+      </div>
+      <div id="cmsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>3 · Supply-chain evidence — RM-21D-01 <span class="lawtag" style="font-size:9.5px">Art 21(2)(d)</span></h2>
+      <div class="sub">Upload a policy / register (PDF · DOCX · TXT). A model <b>locates and quotes</b> evidence; a deterministic scorer assigns the level. Cited, never invented.</div>
+      <div id="drop" class="drop">Drop a document here, or click to choose</div>
+      <input id="file" type="file" accept=".pdf,.docx,.txt,.md" multiple style="display:none">
+      <div id="files" class="note"></div>
+      <div class="footerbtns">
+        <button class="btn gold" onclick="assess()">Extract → score RM-21D-01</button>
+      </div>
+      <div id="amsg"></div>
+    </div>
+  </div>
+
+  <!-- ===================== RIGHT: results ===================== -->
+  <div>
+    <div class="card">
+      <h2>2 · Determination</h2>
+      <div class="legend"><span><b>▮ THE LAW DETERMINES</b> scope · class · size</span><span><i>▮ OUR HEURISTIC SUGGESTS</i> score · tier · rung</span></div>
+      <div id="result" class="note">Enter facts and press <b>Classify</b>.</div>
+    </div>
+
+    <div class="card" id="findingcard" style="display:none">
+      <h2>4 · Cited finding — RM-21D-01</h2>
+      <div id="finding"></div>
+    </div>
+
+    <div class="card">
+      <h2>5 · Snapshot</h2>
+      <div class="sub">Re-derivable JSON: embeds engine + ruleset version + sha256. Same inputs → same <code>content_sha256</code>.</div>
+      <button class="btn ghost" onclick="snapshot()">Export snapshot JSON</button>
+      <div id="smsg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== NO ENGINE HERE — every legal/heuristic value comes from the API. ===== */
+const $=id=>document.getElementById(id);
+let uploaded=[];
+
+async function loadVersion(){
+  try{const v=await (await fetch('/version')).json();
+    $('ver').textContent=`engine ${v.engine_version} · ruleset ${v.ruleset_version} · ${v.ruleset_sha256.slice(0,8)}`;}
+  catch(e){$('ver').textContent='engine (offline)';}
+}
+loadVersion();
+
+function entityPayload(){
+  const num=v=>{const n=parseFloat(v);return v===''||isNaN(n)?null:n;};
+  const flags=[...document.querySelectorAll('#flags input:checked')].map(c=>c.value);
+  return {
+    sector_annex:$('annex').value,
+    sector_name:$('sector_name').value||null,
+    root:{name:$('sector_name').value||'entity',staff:num($('staff').value),
+          turnover_eur:num($('turnover').value),balance_sheet_eur:num($('balance').value)},
+    special_flags:flags,
+    art2_2_designation:$('art22').value||null,
+    prior_band:$('prior').value||null,
+    years_breached:parseInt($('years').value||'2',10),
+    proportionality:{cross_border_systemic:'none',n_geographies:1,n_entities:1,special_entity:flags.length>0,supply_chain:'low'}
+  };
+}
+
+function trap(){
+  $('annex').value='I';$('sector_name').value='Energy';
+  $('staff').value=40;$('turnover').value=15000000;$('balance').value=5000000;
+  document.querySelectorAll('#flags input').forEach(c=>c.checked=false);
+  $('art22').value='';$('prior').value='';$('years').value=2;
+  classify();
+}
+
+function clsName(c){return ({essential:'ESSENTIAL',important:'IMPORTANT',out_of_scope:'OUT OF SCOPE',deferred_designation:'DEFERRED (Art 2(2))'})[c]||c;}
+function money(n){return '€'+Math.round(n).toLocaleString();}
+
+let lastClassify=null;
+async function classify(){
+  $('cmsg').innerHTML='<div class="msg"><span class="spin"></span> classifying…</div>';
+  try{
+    const r=await fetch('/classify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entityPayload())});
+    const d=await r.json();lastClassify=d;$('cmsg').innerHTML='';
+    if(d.status==='INSUFFICIENT_INPUT'){
+      $('result').innerHTML=`<div class="msg err"><b>INSUFFICIENT_INPUT</b> — no verdict issued.<ul>${d.reasons.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+      return;
+    }
+    const v=d.verdict,p=d.proportionality,b=d.bar;
+    const flagsHtml=v.flags.length?`<div class="flag">${v.flags.join('<br>')}</div>`:'';
+    $('result').innerHTML=`
+      <div class="lawband">
+        <div class="split"><span class="lawtag">The law determines</span></div>
+        <div class="kv"><span>Scope</span><b>${v.in_scope?'IN SCOPE':'OUT OF SCOPE'}</b></div>
+        <div class="kv"><span>Class</span><span class="pill cls-${v.entity_class}">${clsName(v.entity_class)}</span></div>
+        <div class="kv"><span>Size band</span><b>${v.size_band}${v.raw_size_band!==v.size_band?` (raw ${v.raw_size_band})`:''}</b></div>
+        <div class="kv"><span>Consolidated</span><b>${v.consolidated.staff} staff · ${money(v.consolidated.turnover_eur)} · ${money(v.consolidated.balance_sheet_eur)}</b></div>
+        <div class="kv"><span>Reason</span><span style="text-align:right;max-width:62%">${v.reason}</span></div>
+        <div style="margin-top:8px">${v.audit.map(a=>`<div class="audit">${a}</div>`).join('')}</div>
+        ${flagsHtml}
+      </div>
+      <div class="heurband">
+        <div class="split"><span class="heurtag">Our heuristic suggests</span> <span style="color:var(--dim);font-weight:600;text-transform:none;letter-spacing:0">no statutory force · tunable</span></div>
+        <div class="kv"><span>Proportionality score</span><b>${p.score}/100 ${p.raw_score!==p.score?`(raw ${p.raw_score})`:''}</b></div>
+        <div class="kv"><span>Tier</span><b>${p.tier}</b></div>
+        <div class="kv"><span>Required rung (every in-scope control)</span><span class="lvbadge lv${b.required_level}">L${b.required_level} · ${b.required_name}</span></div>
+        ${p.floors_applied.length?`<div class="note">floors: ${p.floors_applied.join('; ')}</div>`:''}
+        <div class="note">${b.note}</div>
+      </div>`;
+  }catch(e){$('cmsg').innerHTML=`<div class="msg err">request failed: ${e}</div>`;}
+}
+
+/* ---- file upload ---- */
+$('drop').onclick=()=>$('file').click();
+$('file').onchange=e=>setFiles([...e.target.files]);
+['dragover','dragenter'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.add('over');}));
+['dragleave','drop'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.remove('over');}));
+$('drop').addEventListener('drop',e=>setFiles([...e.dataTransfer.files]));
+function setFiles(fs){uploaded=fs;$('files').textContent=fs.length?('selected: '+fs.map(f=>f.name).join(', ')):'';}
+
+async function assess(){
+  if(!uploaded.length){$('amsg').innerHTML='<div class="msg warn">Choose at least one document first.</div>';return;}
+  $('amsg').innerHTML='<div class="msg"><span class="spin"></span> ingesting → extracting (model) → scoring (deterministic)…</div>';
+  const fd=new FormData();
+  fd.append('control_id','RM-21D-01');
+  fd.append('entity',JSON.stringify(entityPayload()));
+  uploaded.forEach(f=>fd.append('files',f));
+  try{
+    const r=await fetch('/assess/control',{method:'POST',body:fd});
+    if(r.status===503){$('amsg').innerHTML='<div class="msg warn"><b>Extraction needs a model API key.</b> The deterministic core runs offline; set <code>ANTHROPIC_API_KEY</code> on the server to enable cited extraction.</div>';return;}
+    if(!r.ok){$('amsg').innerHTML=`<div class="msg err">error ${r.status}: ${(await r.json()).detail||''}</div>`;return;}
+    const d=await r.json();$('amsg').innerHTML=`<div class="msg ok">${d.facts.length} cited fact(s) extracted; level assigned deterministically.</div>`;
+    renderFinding(d.finding,d.facts);
+  }catch(e){$('amsg').innerHTML=`<div class="msg err">request failed: ${e}</div>`;}
+}
+
+function renderFinding(f,facts){
+  if(!f){$('findingcard').style.display='none';return;}
+  $('findingcard').style.display='block';
+  const evHtml=f.evidence.map(e=>`<div class="ev"><span class="src ek-${e.evidence_kind}">${e.evidence_kind.toUpperCase()}</span> — ${e.claim}
+     <div class="q">“${e.source_quote}”</div><div class="src">${e.doc_id} · page ${e.page}</div></div>`).join('') || '<div class="note">No provenance-bearing evidence found — status insufficient_evidence.</div>';
+  $('finding').innerHTML=`
+    <div class="heurband">
+      <div class="split"><span class="heurtag">Our heuristic suggests</span></div>
+      <div class="kv"><span>Achieved</span><span class="lvbadge lv${f.achieved_level}">L${f.achieved_level} · ${f.achieved_name}</span></div>
+      <div class="kv"><span>Required</span><span class="lvbadge lv${f.required_level}">L${f.required_level} · ${f.required_name}</span></div>
+      <div class="kv"><span>Gap</span><b>${f.gap}</b></div>
+      <div class="kv"><span>Status</span><b>${f.status}</b></div>
+      <div class="note">${f.rationale}</div>
+    </div>
+    <h2 style="font-size:13px;color:var(--navy);margin:10px 0 2px">Cited evidence</h2>
+    ${evHtml}
+    <div class="note">${f.draft}</div>`;
+}
+
+async function snapshot(){
+  $('smsg').innerHTML='<div class="msg"><span class="spin"></span> building…</div>';
+  try{
+    const r=await fetch('/snapshot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({inputs:entityPayload(),control_id:'RM-21D-01'})});
+    const d=await r.json();
+    const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');
+    a.href=url;a.download=`atlas_snapshot_${(d.content_sha256||'na').slice(0,12)}.json`;a.click();URL.revokeObjectURL(url);
+    $('smsg').innerHTML=`<div class="msg ok">snapshot ${d.status} · content_sha256 <code>${(d.content_sha256||'').slice(0,16)}…</code></div>`;
+  }catch(e){$('smsg').innerHTML=`<div class="msg err">request failed: ${e}</div>`;}
+}
+
+classify();
+</script>
+</body>
+</html>

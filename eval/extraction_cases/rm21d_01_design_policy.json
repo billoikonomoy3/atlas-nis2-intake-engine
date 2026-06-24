@@ -1,0 +1,10 @@
+{
+  "case_id": "rm21d_01_design_policy",
+  "control_id": "RM-21D-01",
+  "doc_id": "supplier_security_policy.txt",
+  "snippet": "Supplier Security Policy v3.1. All critical third-party suppliers must sign a data processing agreement and meet our baseline security controls before onboarding. Each supplier is assigned a criticality rating, and contracts include a right-to-audit clause.",
+  "expected_facts": [
+    {"evidence_kind": "design", "quote_contains": "must sign a data processing agreement"},
+    {"evidence_kind": "design", "quote_contains": "right-to-audit clause"}
+  ]
+}
