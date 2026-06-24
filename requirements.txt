@@ -1,0 +1,2 @@
+# Atlas NIS2 Scope Checker - no third-party dependencies (standard library only).
+# This file's presence tells the build system (Railway/Nixpacks) to use Python.
