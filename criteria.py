@@ -428,6 +428,28 @@ CRITERIA = [
     },
 ]
 
+# ---------------------------------------------------------------------------
+# Inherent criticality (static triage data, NOT a maturity score, NOT a safe
+# harbour) and operating-criticality flag per control. Added for the Stage 4-7
+# assessment layer (assess.py): inherent_criticality is a fixed 1..3 severity
+# (1 = supporting, 2 = important, 3 = load-bearing for NIS2) used only to ORDER
+# findings by impact; operating_critical marks controls whose top maturity
+# legitimately needs operating evidence (an evidence-SEQUENCING flag, never a
+# legal pass/fail gate - NIS2 Art 21(1) stays outcomes-based).
+# ---------------------------------------------------------------------------
+
+_INHERENT_CRITICALITY = {
+    "GOV-20-01": 3, "GOV-20-02": 3,
+    "RM-21A-01": 2, "RM-21B-01": 3, "RM-21C-01": 2, "RM-21D-01": 3, "RM-21E-01": 2,
+    "RM-21F-01": 2, "RM-21G-01": 2, "RM-21H-01": 2, "RM-21I-01": 2, "RM-21J-01": 2,
+    "REP-23-01": 3, "REP-23-02": 3, "REP-23-03": 3, "REP-23-04": 3,
+}
+
+for _c in CRITERIA:
+    _c["inherent_criticality"] = _INHERENT_CRITICALITY[_c["id"]]
+    _c["operating_critical"] = True
+
+
 # Coverage assertion (Art 20, all of 21(2)(a)-(j), Art 23 stages).
 _COVERED = {c["nis2_ref"] for c in CRITERIA}
 
