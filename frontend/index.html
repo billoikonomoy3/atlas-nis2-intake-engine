@@ -3,167 +3,577 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Atlas — NIS2 Stage-3 Intake & Compliance-Baseline Engine</title>
+<title>Atlas — NIS2 Compliance Intelligence</title>
 <style>
   :root{
-    --navy:#0d2238; --navy2:#13324f; --teal:#1f8a8a; --accent:#2f6fed; --accent2:#0ea5a5;
-    --ink:#16222e; --muted:#5b6b7b; --dim:#8595a4; --line:#e3e9f0; --bg:#eef2f6; --card:#ffffff;
-    --ess:#c0392b; --imp:#2f6fbf; --out:#7a8794; --def:#7d4fbf;
-    --l0:#9b2226; --l1:#bb6b00; --l2:#a07400; --l3:#1e7a46; --l4:#0d6e6e;
-    --ok:#1e8e54; --warn:#b8860b; --gold:#c79100; --law:#13324f; --heur:#8a6500;
+    /* surfaces & ink */
+    --bg:#eef1f6; --bg-grad:#e7ecf4; --surface:#ffffff; --surface-2:#f7f9fc; --surface-3:#f1f4f9;
+    --border:#e3e8f0; --border-strong:#d2dae6; --line:#e3e8f0;
+    --ink:#0f1c30; --ink-2:#41526a; --ink-3:#69788d; --ink-4:#9aa8ba;
+    /* brand */
+    --brand:#0e2541; --brand-2:#1a3a63; --brand-3:#26456f; --accent:#3567e0; --accent-2:#2a55c2; --accent-soft:#eaf0fe;
+    /* statutory (law) vs heuristic split */
+    --law:#0e2541; --law-soft:#eef2f8; --law-line:#c5d2e4;
+    --heur:#9a6a00; --heur-soft:#fbf4e6; --heur-line:#ecd9ad;
+    /* semantic */
+    --ok:#117a48; --ok-soft:#e7f4ec; --ok-line:#bfe3cd;
+    --warn:#9a6700; --warn-soft:#fdf4dd; --warn-line:#eedcae;
+    --bad:#b42318; --bad-soft:#fdecea; --bad-line:#f3c7c2;
+    --info:#1c5bb8; --info-soft:#e9f1fc;
+    /* maturity ladder L0..L4 (red -> teal-green) — used by scope/proportionality badges */
+    --l0:#b42318; --l1:#c2590c; --l2:#9a7600; --l3:#117a48; --l4:#0e7490;
+    /* proportionality tiers (calm -> rigorous) */
+    --t0:#7c8aa0; --t1:#3567e0; --t2:#bf7d00; --t3:#b42318;
+    /* effects */
+    --r:14px; --r-sm:9px; --r-xs:6px;
+    --sh-sm:0 1px 2px rgba(16,30,54,.06);
+    --sh:0 6px 22px -10px rgba(16,30,54,.22), 0 1px 3px rgba(16,30,54,.06);
+    --sh-lg:0 18px 48px -22px rgba(16,30,54,.34);
+    --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;
   }
   *{box-sizing:border-box}
-  body{margin:0;font:14px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);
-    background:radial-gradient(1100px 520px at 88% -8%,#e7eef7 0,transparent 60%),var(--bg)}
-  header{position:sticky;top:0;z-index:30;background:linear-gradient(100deg,var(--navy),var(--navy2));color:#fff;
-    padding:12px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 2px 14px rgba(13,34,56,.18)}
-  header .brand{font-size:19px;font-weight:800}
-  header .brand span{color:#5fd0d0}
-  header .brand small{display:block;font-size:10px;font-weight:700;color:#8fb0cc;letter-spacing:.7px;text-transform:uppercase;margin-top:1px}
-  header .tag{color:#b9c8d6;font-size:12px;flex:1;min-width:180px;line-height:1.4}
-  .stamp{font-size:10px;font-weight:800;letter-spacing:.7px;color:#241a00;background:var(--gold);padding:4px 9px;border-radius:5px;white-space:nowrap}
-  .badge{font-size:11px;padding:5px 10px;border-radius:20px;font-weight:700;white-space:nowrap;background:#0d3a26;color:#7be0a8;border:1px solid #1e8e54}
-  .wrap{max-width:1280px;margin:0 auto;padding:18px 22px;display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
-  @media(max-width:960px){.wrap{grid-template-columns:1fr}}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(16,34,56,.05)}
-  .card h2{margin:0 0 4px;font-size:17px;color:var(--navy)}
-  .card .sub{color:var(--muted);font-size:12.5px;margin-bottom:14px;line-height:1.5}
-  label{display:block;font-weight:600;font-size:12px;color:var(--muted);margin:11px 0 4px}
-  input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
-  input:focus,select:focus{outline:2px solid #cfe0fb;border-color:var(--accent)}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;font:14px/1.55 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);
+    background:
+      radial-gradient(1200px 560px at 92% -12%,#dbe6f6 0,transparent 58%),
+      radial-gradient(900px 500px at 2% 0%,#e9eef7 0,transparent 50%),
+      var(--bg);
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-feature-settings:"cv05","ss01";}
+  .num{font-variant-numeric:tabular-nums}
+  a{color:var(--accent)}
+
+  /* ============ header ============ */
+  header.app{position:sticky;top:0;z-index:40;
+    background:linear-gradient(112deg,var(--brand) 0%,var(--brand-2) 64%,#214a7d 100%);
+    color:#fff;border-bottom:1px solid rgba(255,255,255,.06);
+    box-shadow:0 8px 30px -12px rgba(8,22,42,.55)}
+  .hbar{max-width:1320px;margin:0 auto;padding:13px 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .lockup{display:flex;align-items:center;gap:12px;min-width:0}
+  .mark{width:38px;height:38px;border-radius:10px;flex:0 0 auto;
+    background:linear-gradient(150deg,#3f7ad6,#2a55c2 60%,#1c3f86);
+    display:grid;place-items:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.34),0 4px 12px -4px rgba(20,46,92,.7)}
+  .wordmark{line-height:1.05}
+  .wordmark .nm{font-size:20px;font-weight:800;letter-spacing:-.2px}
+  .wordmark .nm i{color:#7fc4ff;font-style:normal}
+  .wordmark .sub{display:block;font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#9fc0e0;margin-top:2px}
+  .htag{flex:1;min-width:200px;color:#cdd9e8;font-size:12.5px;line-height:1.45}
+  .htag b{color:#eaf2fb;font-weight:700}
+  .hmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:700;padding:6px 11px;border-radius:999px;white-space:nowrap}
+  .chip.draft{background:rgba(232,178,40,.16);color:#ffd882;border:1px solid rgba(232,178,40,.42)}
+  .chip.draft .dot{width:7px;height:7px;border-radius:50%;background:#ffce63;box-shadow:0 0 0 3px rgba(255,206,99,.22)}
+  .chip.ver{background:rgba(255,255,255,.07);color:#cfe0f2;border:1px solid rgba(255,255,255,.16);font-family:var(--mono);font-size:10.5px;letter-spacing:.2px}
+  .chip.live{background:rgba(43,194,128,.15);color:#9bf0c4;border:1px solid rgba(43,194,128,.4)}
+  .chip.live .dot{width:7px;height:7px;border-radius:50%;background:#46e39a;box-shadow:0 0 0 3px rgba(70,227,154,.22)}
+
+  /* ============ process strip ============ */
+  .strip{background:rgba(255,255,255,.045);border-top:1px solid rgba(255,255,255,.07)}
+  .strip-in{max-width:1320px;margin:0 auto;padding:9px 26px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+    color:#aac3df;font-size:11.5px;font-weight:600}
+  .step{display:inline-flex;align-items:center;gap:7px;padding:2px 4px;white-space:nowrap}
+  .step .n{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;
+    background:rgba(255,255,255,.12);color:#dbe9f8}
+  .step.law .n{background:rgba(127,196,255,.2);color:#bfe0ff}
+  .step.heur .n{background:rgba(255,206,99,.18);color:#ffd98a}
+  .sep{color:rgba(255,255,255,.28);font-size:13px}
+
+  /* ============ layout ============ */
+  .wrap{max-width:1320px;margin:0 auto;padding:22px 26px 40px;display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:22px;align-items:start}
+  @media(max-width:1020px){.wrap{grid-template-columns:1fr}}
+  .col{display:flex;flex-direction:column;gap:18px;min-width:0}
+
+  /* ============ card ============ */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-sm);overflow:hidden}
+  .card-h{display:flex;align-items:flex-start;gap:12px;padding:16px 18px 12px}
+  .card-h .ix{width:26px;height:26px;border-radius:8px;flex:0 0 auto;display:grid;place-items:center;font-size:12px;font-weight:800;
+    background:var(--surface-3);color:var(--ink-2);border:1px solid var(--border)}
+  .card-h .ix.heur{background:var(--heur-soft);color:var(--heur);border-color:var(--heur-line)}
+  .card-h .tt{flex:1;min-width:0}
+  .card-h h2{margin:0;font-size:17px;font-weight:700;letter-spacing:-.1px;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card-h .sub{color:var(--ink-3);font-size:12px;margin-top:3px;line-height:1.5}
+  .card-b{padding:4px 18px 18px}
+  .ref{font-size:10px;font-weight:800;letter-spacing:.3px;padding:2px 7px;border-radius:5px;background:var(--law-soft);color:var(--law);border:1px solid var(--law-line)}
+
+  /* origin tags */
+  .origin{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:3px 9px;border-radius:999px}
+  .origin.law{background:var(--law-soft);color:var(--law);border:1px solid var(--law-line)}
+  .origin.heur{background:var(--heur-soft);color:var(--heur);border:1px solid var(--heur-line)}
+  .origin .gl{width:6px;height:6px;border-radius:50%}
+  .origin.law .gl{background:var(--law)} .origin.heur .gl{background:var(--heur)}
+
+  /* ============ form ============ */
+  label{display:block;font-weight:650;font-size:11.5px;color:var(--ink-2);margin:13px 0 5px;letter-spacing:.1px}
+  label .hint{font-weight:500;color:var(--ink-4)}
+  input,select{width:100%;padding:9px 11px;border:1px solid var(--border-strong);border-radius:var(--r-sm);font:inherit;background:#fff;color:var(--ink);transition:border-color .12s,box-shadow .12s}
+  input:hover,select:hover{border-color:#b9c5d6}
+  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  input::placeholder{color:var(--ink-4)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+  @media(max-width:560px){.grid3{grid-template-columns:1fr}}
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-  .chk{display:flex;gap:7px;align-items:center;padding:7px 9px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600}
-  .chk input{width:auto}
-  .btn{all:unset;cursor:pointer;background:var(--accent);color:#fff;padding:9px 15px;border-radius:8px;font-weight:700;font-size:12.5px;text-align:center;display:inline-block}
-  .btn:hover{filter:brightness(1.06)}
-  .btn.ghost{background:#eef3fb;color:var(--navy);border:1px solid var(--line)}
-  .btn.gold{background:var(--gold);color:#241a00}
-  .footerbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-  /* law / heuristic split */
-  .split{display:flex;gap:8px;align-items:center;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
-  .lawband{border-left:4px solid var(--law);background:#f1f6fb;border-radius:0 9px 9px 0;padding:12px 14px;margin-bottom:12px}
-  .heurband{border-left:4px solid var(--heur);background:#fdf8ec;border-radius:0 9px 9px 0;padding:12px 14px;margin-bottom:12px}
-  .lawtag{color:#fff;background:var(--law);padding:2px 8px;border-radius:5px}
-  .heurtag{color:#241a00;background:var(--gold);padding:2px 8px;border-radius:5px}
-  .kv{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
-  .kv:last-child{border:0}.kv b{font-weight:800}
-  .pill{display:inline-block;padding:2px 10px;border-radius:11px;font-size:11px;font-weight:800;color:#fff}
-  .cls-essential{background:linear-gradient(100deg,#9b2424,#c0392b)}.cls-important{background:linear-gradient(100deg,#1f5394,#2f6fbf)}
-  .cls-out_of_scope{background:#5e6b78}.cls-deferred_designation{background:linear-gradient(100deg,#5e3a93,#7d4fbf)}
-  .lvbadge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:6px;color:#fff;display:inline-block}
-  .lv0{background:var(--l0)}.lv1{background:var(--l1)}.lv2{background:var(--l2)}.lv3{background:var(--l3)}.lv4{background:var(--l4)}
-  .audit{font-size:11.5px;border-left:3px solid var(--teal);padding:3px 0 3px 10px;margin:4px 0;color:#2b4a4a}
-  .flag{background:#fff7e6;border:1px solid #f0d49a;border-radius:8px;padding:7px 10px;font-size:11.5px;color:#7a5600;margin-top:6px}
-  .ev{border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin:7px 0;background:#fafcff;font-size:12px}
-  .ev .q{font-style:italic;color:#26405a;border-left:3px solid var(--accent);padding-left:8px;margin:3px 0}
-  .ev .src{font-size:10.5px;color:var(--dim);font-weight:700}
-  .ek-design{color:#2f6fbf}.ek-operating{color:#1e7a46}
-  .drop{border:2px dashed #b8c8da;border-radius:10px;padding:18px;text-align:center;color:var(--muted);font-size:12.5px;background:#f7fafe;cursor:pointer}
-  .drop.over{border-color:var(--accent);background:#eef4ff}
-  .msg{font-size:12px;padding:8px 11px;border-radius:8px;margin-top:10px}
-  .msg.err{background:#fdeceb;color:#9b2226;border:1px solid #f1c3bf}
-  .msg.warn{background:#fff7e6;color:#7a5600;border:1px solid #f0d49a}
-  .msg.ok{background:#eaf6ef;color:#1e6e44;border:1px solid #bfe3cd}
-  .spin{display:inline-block;width:13px;height:13px;border:2px solid #cfe0fb;border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
+  .chk{display:inline-flex;gap:7px;align-items:center;padding:7px 11px;border:1px solid var(--border-strong);border-radius:999px;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink-2);transition:all .12s;user-select:none}
+  .chk:hover{border-color:#b9c5d6;background:var(--surface-2)}
+  .chk:has(input:checked){background:var(--accent-soft);border-color:#9cb8f4;color:var(--accent-2)}
+  .chk input{width:auto;accent-color:var(--accent)}
+
+  .btn{all:unset;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    background:var(--accent);color:#fff;padding:10px 16px;border-radius:var(--r-sm);font-weight:700;font-size:12.5px;
+    box-shadow:0 1px 2px rgba(20,46,92,.28);transition:filter .12s,transform .04s}
+  .btn:hover{filter:brightness(1.06)} .btn:active{transform:translateY(1px)}
+  .btn svg{width:15px;height:15px}
+  .btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--border-strong);box-shadow:none}
+  .btn.ghost:hover{background:var(--surface-3)}
+  .btn.gold{background:linear-gradient(180deg,#b98a1e,#9a6f12);color:#fff}
+  .btn.wide{width:100%}
+  .footerbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+
+  /* dropzone */
+  .drop{border:1.5px dashed var(--border-strong);border-radius:var(--r-sm);padding:22px 16px;text-align:center;color:var(--ink-3);font-size:12.5px;background:var(--surface-2);cursor:pointer;transition:all .14s}
+  .drop:hover{border-color:#aebfd6;background:var(--surface-3)}
+  .drop.over{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-2)}
+  .drop .di{width:30px;height:30px;margin:0 auto 8px;color:var(--ink-4)}
+  .drop b{color:var(--accent-2)}
+  .filelist{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+  .fileitem{display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-xs);font-size:12px}
+  .fileitem svg{width:15px;height:15px;color:var(--ink-3);flex:0 0 auto}
+  .fileitem .fn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--ink-2)}
+  .fileitem .fs{color:var(--ink-4);font-size:11px}
+
+  /* messages */
+  .msg{display:flex;align-items:flex-start;gap:9px;font-size:12px;padding:9px 12px;border-radius:var(--r-sm);margin-top:12px;line-height:1.5}
+  .msg svg{width:15px;height:15px;flex:0 0 auto;margin-top:1px}
+  .msg.err{background:var(--bad-soft);color:#8e1d14;border:1px solid var(--bad-line)}
+  .msg.warn{background:var(--warn-soft);color:#7a5200;border:1px solid var(--warn-line)}
+  .msg.ok{background:var(--ok-soft);color:#0c5d36;border:1px solid var(--ok-line)}
+  .msg.info{background:var(--info-soft);color:#174a93;border:1px solid #c9ddf6}
+  .msg ul{margin:5px 0 0;padding-left:18px}
+
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(53,103,224,.25);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;flex:0 0 auto}
   @keyframes sp{to{transform:rotate(360deg)}}
-  .legend{font-size:11px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;margin-top:4px}
-  .legend b{color:var(--law)} .legend i{color:var(--heur);font-style:normal;font-weight:800}
-  .note{font-size:11px;color:var(--dim);margin-top:10px;line-height:1.5}
-  code{background:#eef2f6;padding:1px 5px;border-radius:4px;font-size:11.5px}
+
+  /* ============ determination (statutory) ============ */
+  .verdict-hero{display:flex;align-items:center;gap:14px;padding:14px 15px;border-radius:var(--r-sm);border:1px solid var(--law-line);
+    background:linear-gradient(180deg,#f6f9fd,#eef3fa)}
+  .scope-badge{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;width:74px;height:60px;border-radius:10px;color:#fff;text-align:center;box-shadow:var(--sh-sm)}
+  .scope-badge .lbl{font-size:9px;font-weight:800;letter-spacing:.8px;opacity:.85}
+  .scope-badge .val{font-size:15px;font-weight:850;line-height:1.05;margin-top:2px}
+  .scope-in{background:linear-gradient(150deg,#1a3a63,#0e2541)}
+  .scope-out{background:linear-gradient(150deg,#7c8aa0,#5d6b80)}
+  .verdict-hero .vmeta{flex:1;min-width:0}
+  .verdict-hero .vrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:800;color:#fff;letter-spacing:.2px}
+  .cls-essential{background:linear-gradient(110deg,#8e1d14,#b42318)}
+  .cls-important{background:linear-gradient(110deg,#1c5bb8,#3567e0)}
+  .cls-out_of_scope{background:#5d6b80}
+  .cls-deferred_designation{background:linear-gradient(110deg,#5e3a93,#7d4fbf)}
+
+  .kvgrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;margin-top:12px}
+  .kv{background:#fff;padding:10px 12px;min-width:0}
+  .kv .k{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-4)}
+  .kv .v{font-size:13.5px;font-weight:750;color:var(--ink);margin-top:3px}
+  .kv .v.sm{font-size:12px;font-weight:650}
+  .kv.full{grid-column:1/-1}
+
+  .reasonbox{margin-top:12px;padding:11px 13px;background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--law);border-radius:var(--r-xs);font-size:12.5px;color:var(--ink-2);line-height:1.55}
+  .audit-wrap{margin-top:10px}
+  .audit-wrap summary{cursor:pointer;font-size:11.5px;font-weight:700;color:var(--ink-3);list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
+  .audit-wrap summary::-webkit-details-marker{display:none}
+  .audit-wrap summary .caret{transition:transform .15s;font-size:10px}
+  .audit-wrap[open] summary .caret{transform:rotate(90deg)}
+  .audit{font-size:11.5px;color:var(--ink-2);border-left:2px solid var(--law-line);padding:4px 0 4px 11px;margin:6px 0 0;line-height:1.5}
+  .flagbox{display:flex;align-items:flex-start;gap:9px;margin-top:10px;background:var(--warn-soft);border:1px solid var(--warn-line);border-radius:var(--r-xs);padding:9px 12px;font-size:11.5px;color:#7a5200;line-height:1.55}
+  .flagbox svg{width:15px;height:15px;flex:0 0 auto;margin-top:1px;color:var(--warn)}
+
+  /* ============ proportionality (heuristic) ============ */
+  .define{font-size:12.5px;color:var(--ink-2);line-height:1.55;background:var(--heur-soft);border:1px solid var(--heur-line);border-radius:var(--r-sm);padding:11px 13px;margin-bottom:14px}
+  .define b{color:#7a5200}
+
+  .score-hero{display:flex;align-items:stretch;gap:16px;flex-wrap:wrap}
+  .score-dial{flex:0 0 auto;min-width:132px;text-align:center;padding:14px 12px;border-radius:var(--r-sm);background:linear-gradient(180deg,#fff,var(--surface-2));border:1px solid var(--border)}
+  .score-dial .dial-ring{width:104px;height:104px;border-radius:50%;margin:0 auto;display:grid;place-items:center;
+    background:conic-gradient(var(--ac) calc(var(--pct)*1%),var(--surface-3) 0);transition:background .45s ease}
+  .score-dial .dial-inner{width:80px;height:80px;border-radius:50%;background:#fff;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;box-shadow:inset 0 1px 2px rgba(16,30,54,.10)}
+  .score-dial .dial-inner .big{font-size:31px;font-weight:850;line-height:1;letter-spacing:-1px;color:var(--ac,var(--ink))}
+  .score-dial .dial-inner .den{font-size:11px;font-weight:700;color:var(--ink-4);line-height:1.2}
+  .score-dial .tiername{margin-top:11px;font-size:12px;font-weight:800;letter-spacing:.3px;padding:3px 11px;border-radius:999px;color:#fff;display:inline-block;white-space:nowrap}
+  .score-dial .raw{margin-top:7px;font-size:10.5px;color:var(--ink-4);font-weight:600}
+  .score-expl{flex:1;min-width:180px;display:flex;flex-direction:column;justify-content:center}
+  .score-expl .et{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-4);margin-bottom:4px}
+  .score-expl .ex{font-size:12.5px;color:var(--ink-2);line-height:1.55}
+
+  /* meter */
+  .meter{margin:16px 0 4px}
+  .meter-track{position:relative;height:13px;display:flex;border-radius:999px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(16,30,54,.14)}
+  .meter-track .seg{height:100%}
+  .meter-scale{position:relative;height:16px;margin-top:5px}
+  .meter-scale span{position:absolute;transform:translateX(-50%);font-size:9.5px;color:var(--ink-4);font-weight:700}
+  .meter-labels{display:flex;margin-top:2px}
+  .meter-labels span{text-align:center;font-size:9.5px;font-weight:800;letter-spacing:.3px;text-transform:uppercase}
+  .meter-axis{display:flex;justify-content:space-between;margin-top:8px;font-size:9.5px;color:var(--ink-4);font-weight:600}
+  .meter-axis span:first-child::before{content:"\2190  "}
+  .meter-axis span:last-child::after{content:"  \2192"}
+  .pin{position:absolute;top:-5px;width:0;height:0;z-index:3}
+  .pin .needle{position:absolute;left:-2px;top:-3px;width:4px;height:22px;border-radius:3px;background:var(--ink);box-shadow:0 0 0 2px #fff,0 2px 5px rgba(0,0,0,.3)}
+  .pin .bub{position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:5px;white-space:nowrap;box-shadow:var(--sh-sm)}
+  .pin .bub:after{content:"";position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--ink);border-bottom:0}
+  .pin-raw{position:absolute;top:-1px;width:0;height:0;z-index:2}
+  .pin-raw .nd{position:absolute;left:-1px;top:0;width:2px;height:13px;background:rgba(15,28,48,.4)}
+
+  /* drivers */
+  .drv-head{display:flex;align-items:baseline;justify-content:space-between;margin:18px 0 8px}
+  .drv-head .t{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-3)}
+  .drv-head .h{font-size:11px;color:var(--ink-4)}
+  .drv-legend{display:flex;gap:16px;margin:0 0 10px;font-size:11px;color:var(--ink-4)}
+  .drv-legend span{display:inline-flex;align-items:center;gap:6px}
+  .drv-legend i{width:18px;height:8px;border-radius:999px;flex:0 0 auto}
+  .drv-legend i.lg-fill{background:var(--ink-3)}
+  .drv-legend i.lg-ghost{background:repeating-linear-gradient(90deg,rgba(15,28,48,.05) 0 4px,transparent 4px 8px);border:1px solid var(--border-strong)}
+  .drv{display:flex;align-items:center;gap:11px;padding:7px 0;border-bottom:1px solid var(--surface-3)}
+  .drv:last-child{border-bottom:0}
+  .drv .dt{width:6px;height:24px;border-radius:3px;flex:0 0 auto}
+  .drv .dm{flex:1;min-width:0}
+  .drv .dn{font-size:12.5px;font-weight:700;color:var(--ink)}
+  .drv .dh{font-size:11px;color:var(--ink-4);margin-top:1px;line-height:1.4}
+  .drv .dbarwrap{position:relative;flex:0 0 116px;height:8px;background:var(--surface-3);border-radius:999px;overflow:hidden}
+  .drv .dghost{position:absolute;left:0;top:0;height:100%;border-radius:999px;background:repeating-linear-gradient(90deg,rgba(15,28,48,.05) 0 4px,transparent 4px 8px)}
+  .drv .dfill{position:absolute;left:0;top:0;height:100%;border-radius:999px}
+  .drv .dp{flex:0 0 auto;width:56px;text-align:right;font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap}
+  .drv .dp .dpmax{font-size:10.5px;font-weight:600;color:var(--ink-4)}
+  .drv.zero{opacity:.55}
+  .drv.zero .dp{color:var(--ink-4)}
+  .drv.total{border-top:1px solid var(--border);border-bottom:0;margin-top:5px;padding-top:10px}
+  .drv.total .dn{font-weight:800;color:var(--ink)}
+  .drv.total .dp{color:var(--ink)}
+
+  .floors{margin-top:13px;display:flex;flex-direction:column;gap:7px}
+  .floor{display:flex;align-items:flex-start;gap:9px;background:var(--info-soft);border:1px solid #cbddf6;border-radius:var(--r-xs);padding:8px 11px;font-size:11.5px;color:#174a93;line-height:1.5}
+  .floor svg{width:15px;height:15px;flex:0 0 auto;margin-top:1px;color:var(--info)}
+
+  .consequence{margin-top:15px;display:flex;align-items:center;gap:13px;padding:13px 14px;border-radius:var(--r-sm);
+    background:linear-gradient(180deg,#fff,var(--surface-2));border:1px solid var(--border);border-left:3px solid var(--heur)}
+  .consequence .arrow{flex:0 0 auto;color:var(--heur)}
+  .consequence .ctxt{flex:1;min-width:0}
+  .consequence .ct{font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-4)}
+  .consequence .cv{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.5}
+
+  .lvbadge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:6px;color:#fff}
+  .lv0{background:var(--l0)}.lv1{background:var(--l1)}.lv2{background:var(--l2)}.lv3{background:var(--l3)}.lv4{background:var(--l4)}
+
+  .disclaim{font-size:11px;color:var(--ink-4);margin-top:13px;line-height:1.5;padding-top:11px;border-top:1px dashed var(--border)}
+
+  /* ============ finding / extraction ============ */
+  .status-banner{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:var(--r-sm);margin-bottom:14px}
+  .status-banner .si{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto}
+  .status-banner .si svg{width:19px;height:19px}
+  .status-banner .st{flex:1;min-width:0}
+  .status-banner .stt{font-size:15px;font-weight:800;letter-spacing:-.1px}
+  .status-banner .sts{font-size:11.5px;margin-top:2px;line-height:1.45}
+  .sb-meets{background:var(--ok-soft);border:1px solid var(--ok-line)}
+  .sb-meets .si{background:var(--ok);color:#fff}.sb-meets .stt{color:#0c5d36}.sb-meets .sts{color:#28704c}
+  .sb-gap{background:var(--warn-soft);border:1px solid var(--warn-line)}
+  .sb-gap .si{background:var(--warn);color:#fff}.sb-gap .stt{color:#7a5200}.sb-gap .sts{color:#876200}
+  .sb-insufficient_evidence{background:var(--bad-soft);border:1px solid var(--bad-line)}
+  .sb-insufficient_evidence .si{background:var(--bad);color:#fff}.sb-insufficient_evidence .stt{color:#8e1d14}.sb-insufficient_evidence .sts{color:#9a3127}
+
+  /* maturity ladder — colored by RELATIONSHIP (attained / achieved-verdict / owed / required), not level identity */
+  .ladder{margin:6px 0 4px}
+  .ladder-rungs{display:flex;gap:5px}
+  .rung{flex:1;text-align:center;position:relative}
+  .rung .bar{height:34px;border-radius:7px;background:var(--surface-3);border:1px solid var(--border);display:grid;place-items:center;
+    font-size:12px;font-weight:850;color:var(--ink-4);transition:all .2s}
+  .rung .nm{font-size:9px;font-weight:700;color:var(--ink-4);margin-top:5px;letter-spacing:.2px;line-height:1.2}
+  /* attained rungs (reached) — neutral brand, no good/bad meaning */
+  .rung.filled .bar{color:#fff;border-color:transparent;background:var(--brand-2)}
+  /* owed rungs (above achieved, up to & incl. required) */
+  .rung.gaprung .bar{background:var(--warn-soft);border:1px dashed var(--warn-line);color:var(--warn)}
+  .rung.gaprung .nm{color:var(--warn)}
+  /* achieved rung carries the verdict color (white text, colored fill + ring) */
+  .rung.ach .bar{color:#fff;transform:translateY(-2px)}
+  .rung.ach.v-ok .bar{background:var(--ok);box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ok)}
+  .rung.ach.v-gap .bar{background:var(--warn);box-shadow:0 0 0 3px #fff,0 0 0 5px var(--warn)}
+  .rung.ach.v-bad .bar{background:var(--bad);box-shadow:0 0 0 3px #fff,0 0 0 5px var(--bad)}
+  .rung.ach .nm{color:var(--ink-2);font-weight:800}
+  /* required rung outline cue */
+  .rung.req .bar{outline:2px solid var(--heur);outline-offset:2px}
+  .rung .reqflag{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:800;color:var(--heur);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:1px}
+  .rung .reqflag .tri{width:0;height:0;border:5px solid transparent;border-top-color:var(--heur);border-bottom:0}
+  /* MET marker when achieved == required (replaces REQ; clears the ring) */
+  .rung .reqflag.metflag{color:var(--ok);top:-20px}
+  .rung .reqflag.metflag .tri{border-top-color:var(--ok)}
+  .rung.met.ach .bar{transform:none}
+  .ladder-legend{display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:8px}
+  .ll-item{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink-2)}
+  .ll-item .lk{font-size:10px;font-weight:700;color:var(--ink-4)}
+  .gappill{font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px}
+  .gp-0{background:var(--ok-soft);color:#0c5d36;border:1px solid var(--ok-line)}
+  .gp-n{background:var(--warn-soft);color:#7a5200;border:1px solid var(--warn-line)}
+
+  /* coverage bars */
+  .cov{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:16px}
+  .covcell{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 13px}
+  .covcell .cl{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.2px}
+  .covcell .cl b{font-size:14px;font-weight:850;color:var(--ink)}
+  .covtrack{height:7px;background:var(--surface-3);border-radius:999px;overflow:hidden;margin-top:8px}
+  .covfill{height:100%;border-radius:999px}
+  .covfill.design{background:linear-gradient(90deg,#3567e0,#5b8def)}
+  .covfill.operating{background:linear-gradient(90deg,#117a48,#1aa564)}
+  .covcell .cn{font-size:10.5px;color:var(--ink-4);margin-top:6px}
+
+  /* evidence */
+  .ev-head{display:flex;align-items:center;justify-content:space-between;margin:20px 0 9px}
+  .ev-head h3{margin:0;font-size:12.5px;font-weight:800;letter-spacing:.2px;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .ev-head h3 svg{width:15px;height:15px}
+  .ev-head .cnt{font-size:11px;font-weight:700;color:var(--ink-4)}
+  .ev{border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 13px;margin:9px 0;background:#fff;position:relative;overflow:hidden}
+  .ev:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+  .ev.design:before{background:var(--accent)} .ev.operating:before{background:var(--ok)}
+  .ev-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .ektag{font-size:9.5px;font-weight:850;letter-spacing:.6px;padding:3px 8px;border-radius:5px;text-transform:uppercase}
+  .ektag.design{background:var(--accent-soft);color:var(--accent-2)}
+  .ektag.operating{background:var(--ok-soft);color:#0c5d36}
+  .ev .claim{flex:1;min-width:120px;font-size:12.5px;font-weight:650;color:var(--ink);overflow-wrap:anywhere}
+  .conf{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .conf .cbar{width:42px;height:5px;background:var(--surface-3);border-radius:999px;overflow:hidden}
+  .conf .cbf{height:100%;border-radius:999px;background:var(--ink-4)}
+  .ev .quote{font-style:italic;color:var(--ink-2);font-size:12px;line-height:1.55;border-left:2px solid var(--border-strong);padding:2px 0 2px 11px;margin:9px 0 8px;overflow-wrap:anywhere;max-height:6.5em;overflow-y:auto;overscroll-behavior:contain}
+  .ev .quote::-webkit-scrollbar{width:6px}
+  .ev .quote::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:999px}
+  .ev .cite{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink-4);font-weight:600;overflow-wrap:anywhere}
+  .ev .cite svg{width:12px;height:12px}
+
+  .rationale{margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.6;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-xs);padding:10px 12px;white-space:pre-wrap;word-break:break-word}
+  .draftnote{display:flex;align-items:center;gap:8px;margin-top:11px;font-size:11px;font-weight:700;color:var(--heur);background:var(--heur-soft);border:1px solid var(--heur-line);border-radius:var(--r-xs);padding:8px 11px}
+  .draftnote svg{width:14px;height:14px;flex:0 0 auto}
+
+  /* empty state */
+  .empty{text-align:center;padding:26px 16px;color:var(--ink-4)}
+  .empty .ei{width:42px;height:42px;margin:0 auto 12px;color:var(--border-strong)}
+  .empty .ei svg{width:100%;height:100%}
+  .empty .et{font-size:13px;font-weight:700;color:var(--ink-3)}
+  .empty .es{font-size:12px;margin-top:5px;line-height:1.5}
+
+  /* footer */
+  footer{max-width:1320px;margin:8px auto 0;padding:18px 26px 30px;color:var(--ink-4);font-size:11px;line-height:1.6;
+    display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--border)}
+  footer .foot-brand{display:flex;align-items:flex-start;gap:10px;flex:1;min-width:240px}
+  footer .foot-mark{flex:0 0 auto;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:var(--ink-3);background:var(--surface-3);border:1px solid var(--border);margin-top:1px}
+  footer .fl b{color:var(--ink-3)}
+  footer .foot-meta{text-align:right;max-width:360px}
+  footer code{font-family:var(--mono);background:var(--surface-3);padding:1px 5px;border-radius:4px;font-size:10.5px;color:var(--ink-2)}
 </style>
 </head>
 <body>
-<header>
-  <div class="brand">Atlas<span>.</span><small>NIS2 readiness engine</small></div>
-  <div class="tag">Deterministic Stage-3 → compliance-baseline. <b style="color:#cfe0ee">No LLM in the judgment path</b> — a model runs only in document extraction.</div>
-  <span class="stamp">DRAFT — REQUIRES REVIEW</span>
-  <span id="ver" class="badge">engine …</span>
+
+<header class="app">
+  <div class="hbar">
+    <div class="lockup">
+      <div class="mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.7"/>
+          <path d="M3 12h18M12 3c2.8 2.4 4.2 5.6 4.2 9s-1.4 6.6-4.2 9c-2.8-2.4-4.2-5.6-4.2-9S9.2 5.4 12 3z" stroke="#fff" stroke-width="1.5" fill="none" opacity=".9"/>
+        </svg>
+      </div>
+      <div class="wordmark">
+        <span class="nm">Atlas<i>.</i></span>
+        <span class="sub">Compliance Intelligence</span>
+      </div>
+    </div>
+    <div class="htag">NIS2 Stage-3 intake → compliance baseline. <b>The judgment path runs no model</b> — a model is used only to locate &amp; quote evidence inside documents.</div>
+    <div class="hmeta">
+      <span class="chip live"><span class="dot"></span>Deterministic core</span>
+      <span class="chip draft"><span class="dot"></span>DRAFT · REQUIRES REVIEW</span>
+      <span id="ver" class="chip ver">engine …</span>
+    </div>
+  </div>
+  <div class="strip">
+    <div class="strip-in">
+      <span class="step law"><span class="n">1</span>Entity facts</span><span class="sep">→</span>
+      <span class="step law"><span class="n">2</span>Determination</span><span class="sep">→</span>
+      <span class="step heur"><span class="n">3</span>Proportionality</span><span class="sep">→</span>
+      <span class="step"><span class="n">4</span>Evidence</span><span class="sep">→</span>
+      <span class="step heur"><span class="n">5</span>Finding</span><span class="sep">→</span>
+      <span class="step"><span class="n">6</span>Snapshot</span>
+      <span style="flex:1"></span>
+      <span class="origin law" style="background:transparent;border-color:rgba(127,196,255,.35);color:#bfe0ff"><span class="gl" style="background:#7fc4ff"></span>The law determines</span>
+      <span class="origin heur" style="background:transparent;border-color:rgba(255,206,99,.35);color:#ffd98a"><span class="gl" style="background:#ffce63"></span>Our heuristic suggests</span>
+    </div>
+  </div>
 </header>
 
 <div class="wrap">
   <!-- ===================== LEFT: intake ===================== -->
-  <div>
+  <div class="col">
     <div class="card">
-      <h2>1 · Entity facts</h2>
-      <div class="sub">From user-provided facts only. Malformed financials return <code>INSUFFICIENT_INPUT</code> — never a confident verdict.</div>
-      <label>Sector (Annex)</label>
-      <select id="annex">
-        <option value="I">Annex I — high-criticality (Energy, Health, Digital infra…)</option>
-        <option value="II">Annex II — other critical (Manufacturing, Food, Research…)</option>
-        <option value="none">Not a covered sector</option>
-      </select>
-      <label>Sector name (optional)</label>
-      <input id="sector_name" placeholder="e.g. Energy">
-      <div class="grid3">
-        <div><label>Staff (headcount)</label><input id="staff" type="number" value="300"></div>
-        <div><label>Turnover € / yr</label><input id="turnover" type="number" value="80000000"></div>
-        <div><label>Balance sheet €</label><input id="balance" type="number" value="60000000"></div>
+      <div class="card-h">
+        <div class="ix">1</div>
+        <div class="tt">
+          <h2>Entity facts <span class="origin law"><span class="gl"></span>Statutory inputs</span></h2>
+          <div class="sub">User-provided facts only. Malformed financials return <code>INSUFFICIENT_INPUT</code> — never a confident verdict.</div>
+        </div>
       </div>
-      <label>Article 3 / 2(2) special flags</label>
-      <div class="chips" id="flags">
-        <label class="chk"><input type="checkbox" value="qtsp">QTSP</label>
-        <label class="chk"><input type="checkbox" value="dns">DNS</label>
-        <label class="chk"><input type="checkbox" value="tld">TLD registry</label>
-        <label class="chk"><input type="checkbox" value="ecomms">Public e-comms</label>
-        <label class="chk"><input type="checkbox" value="public_admin_central">Public admin (central)</label>
+      <div class="card-b">
+        <label>Sector (NIS2 Annex)</label>
+        <select id="annex">
+          <option value="I">Annex I — high-criticality (Energy, Health, Digital infra…)</option>
+          <option value="II">Annex II — other critical (Manufacturing, Food, Research…)</option>
+          <option value="none">Not a covered sector</option>
+        </select>
+        <label>Sector name <span class="hint">(optional)</span></label>
+        <input id="sector_name" placeholder="e.g. Energy">
+        <div class="grid3">
+          <div><label>Staff <span class="hint">(FTE)</span></label><input id="staff" type="number" value="300" class="num"></div>
+          <div><label>Turnover <span class="hint">€/yr</span></label><input id="turnover" type="number" value="80000000" class="num"></div>
+          <div><label>Balance sheet <span class="hint">€</span></label><input id="balance" type="number" value="60000000" class="num"></div>
+        </div>
+        <label>Article 3 / 2(2) special flags</label>
+        <div class="chips" id="flags">
+          <label class="chk"><input type="checkbox" value="qtsp">QTSP</label>
+          <label class="chk"><input type="checkbox" value="dns">DNS</label>
+          <label class="chk"><input type="checkbox" value="tld">TLD registry</label>
+          <label class="chk"><input type="checkbox" value="ecomms">Public e-comms</label>
+          <label class="chk"><input type="checkbox" value="public_admin_central">Public admin (central)</label>
+        </div>
+        <div class="grid3">
+          <div><label>Art 2(2) designation</label><select id="art22"><option value="">none</option><option value="active">active</option><option value="pending">pending</option></select></div>
+          <div><label>Prior size band</label><select id="prior"><option value="">none</option><option>below_medium</option><option>medium</option><option>large</option></select></div>
+          <div><label>Years breached</label><input id="years" type="number" value="2" class="num"></div>
+        </div>
+        <div class="footerbtns">
+          <button class="btn" onclick="classify()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            Run determination
+          </button>
+          <button class="btn ghost" onclick="trap()">Load false-positive trap</button>
+        </div>
+        <div id="cmsg"></div>
       </div>
-      <div class="grid3">
-        <div><label>Art 2(2) designation</label><select id="art22"><option value="">none</option><option value="active">active</option><option value="pending">pending</option></select></div>
-        <div><label>Prior size band</label><select id="prior"><option value="">none</option><option>below_medium</option><option>medium</option><option>large</option></select></div>
-        <div><label>Years breached</label><input id="years" type="number" value="2"></div>
-      </div>
-      <div class="footerbtns">
-        <button class="btn" onclick="classify()">Classify →</button>
-        <button class="btn ghost" onclick="trap()">Load the false-positive trap</button>
-      </div>
-      <div id="cmsg"></div>
     </div>
 
     <div class="card">
-      <h2>3 · Supply-chain evidence — RM-21D-01 <span class="lawtag" style="font-size:9.5px">Art 21(2)(d)</span></h2>
-      <div class="sub">Upload a policy / register (PDF · DOCX · TXT). A model <b>locates and quotes</b> evidence; a deterministic scorer assigns the level. Cited, never invented.</div>
-      <div id="drop" class="drop">Drop a document here, or click to choose</div>
-      <input id="file" type="file" accept=".pdf,.docx,.txt,.md" multiple style="display:none">
-      <div id="files" class="note"></div>
-      <div class="footerbtns">
-        <button class="btn gold" onclick="assess()">Extract → score RM-21D-01</button>
+      <div class="card-h">
+        <div class="ix">4</div>
+        <div class="tt">
+          <h2>Supply-chain evidence <span class="ref">RM-21D-01 · Art 21(2)(d)</span></h2>
+          <div class="sub">Upload a policy / register (PDF · DOCX · TXT). A model <b>locates and quotes</b> evidence; a deterministic scorer assigns the level. Cited, never invented.</div>
+        </div>
       </div>
-      <div id="amsg"></div>
+      <div class="card-b">
+        <div id="drop" class="drop">
+          <svg class="di" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L8 8m4-4l4 4"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+          <div>Drop a document here, or <b>click to browse</b></div>
+          <div style="font-size:11px;color:var(--ink-4);margin-top:4px">PDF · DOCX · TXT · MD</div>
+        </div>
+        <input id="file" type="file" accept=".pdf,.docx,.txt,.md" multiple style="display:none">
+        <div id="files" class="filelist"></div>
+        <div class="footerbtns">
+          <button class="btn gold wide" onclick="assess()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9 5 9-5M3 12l9 5 9-5M3 17l9 5 9-5"/></svg>
+            Extract &amp; score RM-21D-01
+          </button>
+        </div>
+        <div id="amsg"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <div class="ix">6</div>
+        <div class="tt">
+          <h2>Reproducible snapshot</h2>
+          <div class="sub">Re-derivable JSON embedding engine + ruleset version + sha256. Same inputs → identical <code>content_sha256</code>.</div>
+        </div>
+      </div>
+      <div class="card-b">
+        <button class="btn ghost wide" onclick="snapshot()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Export snapshot JSON
+        </button>
+        <div id="smsg"></div>
+      </div>
     </div>
   </div>
 
   <!-- ===================== RIGHT: results ===================== -->
-  <div>
+  <div class="col">
     <div class="card">
-      <h2>2 · Determination</h2>
-      <div class="legend"><span><b>▮ THE LAW DETERMINES</b> scope · class · size</span><span><i>▮ OUR HEURISTIC SUGGESTS</i> score · tier · rung</span></div>
-      <div id="result" class="note">Enter facts and press <b>Classify</b>.</div>
+      <div class="card-h">
+        <div class="ix">2</div>
+        <div class="tt">
+          <h2>Determination <span class="origin law"><span class="gl"></span>The law determines</span></h2>
+          <div class="sub">Scope, class &amp; size band under Directive (EU) 2022/2555 and Reg. 2003/361/EC — pure, reproducible code.</div>
+        </div>
+      </div>
+      <div class="card-b" id="result"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <div class="ix heur">3</div>
+        <div class="tt">
+          <h2>Proportionality &amp; required bar <span class="origin heur"><span class="gl"></span>Our heuristic suggests</span></h2>
+          <div class="sub">A transparent, tunable calibration — <b>no statutory force</b>. NIS2 Art 21(1) is outcomes-based.</div>
+        </div>
+      </div>
+      <div class="card-b" id="prop"></div>
     </div>
 
     <div class="card" id="findingcard" style="display:none">
-      <h2>4 · Cited finding — RM-21D-01</h2>
-      <div id="finding"></div>
-    </div>
-
-    <div class="card">
-      <h2>5 · Snapshot</h2>
-      <div class="sub">Re-derivable JSON: embeds engine + ruleset version + sha256. Same inputs → same <code>content_sha256</code>.</div>
-      <button class="btn ghost" onclick="snapshot()">Export snapshot JSON</button>
-      <div id="smsg"></div>
+      <div class="card-h">
+        <div class="ix heur">5</div>
+        <div class="tt">
+          <h2>Cited finding — RM-21D-01 <span class="origin heur"><span class="gl"></span>Deterministic score</span></h2>
+          <div class="sub">Maturity assigned by rule from cited evidence; the model only located &amp; quoted it.</div>
+        </div>
+      </div>
+      <div class="card-b" id="finding"></div>
     </div>
   </div>
 </div>
+
+<footer>
+  <div class="foot-brand">
+    <span class="foot-mark" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M3 12h18M12 3c2.8 2.4 4.2 5.6 4.2 9s-1.4 6.6-4.2 9c-2.8-2.4-4.2-5.6-4.2-9S9.2 5.4 12 3z" fill="none" opacity=".85"/>
+      </svg>
+    </span>
+    <div class="fl"><b>Atlas Compliance Intelligence</b> — deterministic NIS2 readiness engine · The law determines scope; the heuristic informs, never replaces, Art 21(1) judgment.</div>
+  </div>
+  <div class="fl foot-meta">Every artefact is <b>DRAFT — REQUIRES REVIEW</b> · ISO/IEC 27001:2022 text not reproduced · <span id="fver">—</span></div>
+</footer>
 
 <script>
 /* ===== NO ENGINE HERE — every legal/heuristic value comes from the API. ===== */
 const $=id=>document.getElementById(id);
 let uploaded=[];
 
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function money(n){return '€'+Math.round(n).toLocaleString('en-US');}
+function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
+
+const MAT_SHORT=['None','Initial','Repeatable','Defined','Managed'];
+const MAT_FULL=['None','Initial / ad hoc','Repeatable (documented)','Defined (operating)','Managed / measured'];
+const MAT_MAX=MAT_SHORT.length-1; // 4 maturity levels above None
+
+const ICON={
+  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L14.7 3.9a2 2 0 00-3.4 0z"/></svg>',
+  err:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4m0-4h.01"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>',
+  arrow:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>',
+};
+
 async function loadVersion(){
   try{const v=await (await fetch('/version')).json();
-    $('ver').textContent=`engine ${v.engine_version} · ruleset ${v.ruleset_version} · ${v.ruleset_sha256.slice(0,8)}`;}
+    const t=`engine ${v.engine_version} · ruleset ${v.ruleset_version} · ${v.ruleset_sha256.slice(0,8)}`;
+    $('ver').textContent=t; $('fver').innerHTML='ruleset <code>'+esc(v.ruleset_version)+'</code> · sha256 <code>'+esc(v.ruleset_sha256.slice(0,12))+'…</code>';}
   catch(e){$('ver').textContent='engine (offline)';}
 }
 loadVersion();
@@ -192,41 +602,146 @@ function trap(){
   classify();
 }
 
-function clsName(c){return ({essential:'ESSENTIAL',important:'IMPORTANT',out_of_scope:'OUT OF SCOPE',deferred_designation:'DEFERRED (Art 2(2))'})[c]||c;}
-function money(n){return '€'+Math.round(n).toLocaleString();}
+function clsName(c){return ({essential:'ESSENTIAL',important:'IMPORTANT',out_of_scope:'OUT OF SCOPE',deferred_designation:'DEFERRED · Art 2(2)'})[c]||c;}
+
+/* ---- proportionality presentation metadata ---- */
+const TIERS=[
+  {name:'Foundational',lo:0,hi:39,w:40,color:'var(--t0)',short:'Found.'},
+  {name:'Standard',    lo:40,hi:59,w:20,color:'var(--t1)',short:'Standard'},
+  {name:'Enhanced',    lo:60,hi:79,w:20,color:'var(--t2)',short:'Enhanced'},
+  {name:'Critical',    lo:80,hi:100,w:20,color:'var(--t3)',short:'Critical'},
+];
+function tierColor(name){const t=TIERS.find(t=>t.name===name);return t?t.color:'var(--ink-3)';}
+const DRIVERS={
+  entity_class:         {label:'Regulatory class',           max:25, hint:'Essential entities carry the highest statutory duties.', color:'#1f3a68'},
+  size_band:            {label:'Entity size',                max:25, hint:'Larger entities carry greater systemic weight.',       color:'#3567e0'},
+  sector_annex:         {label:'Sector criticality',         max:15, hint:'Annex I sectors are high-criticality.',               color:'#4f93e6'},
+  cross_border_systemic:{label:'Cross-border / systemic role',max:15, hint:'Systemic or sole-national reach in a Member State.',  color:'#2f9b94'},
+  footprint:            {label:'Operational footprint',      max:10, hint:'Geographic spread and number of group entities.',     color:'#5f9e3f'},
+  special_entity:       {label:'Special-entity status',      max:5,  hint:'QTSP / DNS / TLD / e-comms / public administration.',  color:'#c08a2e'},
+  supply_chain:         {label:'Supply-chain exposure',      max:5,  hint:'Dependence on critical third-party suppliers.',       color:'#a85d3c'},
+};
+const DRIVER_SCALE=25; // largest single-driver contribution -> bars are absolute-comparable
+
+function meterHtml(score,raw){
+  const segs=TIERS.map(t=>`<span class="seg" style="flex:${t.w};background:${t.color}"></span>`).join('');
+  const ticks=[0,40,60,80,100].map(v=>`<span style="left:${v}%">${v}</span>`).join('');
+  const labels=TIERS.map(t=>`<span style="flex:${t.w};color:${t.color}">${t.short}</span>`).join('');
+  const pos=clamp(score,0,100);
+  // keep the bubble inside the track at the extremes (needle stays truthful on pos%)
+  const bubShift=pos<7?`calc(-50% + ${((7-pos)*1.6).toFixed(1)}px)`:pos>93?`calc(-50% - ${((pos-93)*1.6).toFixed(1)}px)`:'-50%';
+  const rawPin=(raw!=null&&raw!==score)?`<div class="pin-raw" style="left:${clamp(raw,0,100)}%"><div class="nd" title="raw score ${raw} (before floor)"></div></div>`:'';
+  return `<div class="meter">
+    <div class="meter-track">${segs}
+      ${rawPin}
+      <div class="pin" style="left:${pos}%"><div class="bub num" style="transform:translateX(${bubShift})">${score}</div><div class="needle"></div></div>
+    </div>
+    <div class="meter-scale num">${ticks}</div>
+    <div class="meter-labels">${labels}</div>
+    <div class="meter-axis"><span>lighter obligations</span><span>more demanding bar</span></div>
+  </div>`;
+}
+
+function driversHtml(points){
+  const rows=Object.keys(DRIVERS).map(k=>({key:k,pts:(points&&points[k])||0,...DRIVERS[k]}))
+    .sort((a,b)=>b.pts-a.pts || b.max-a.max);
+  const total=rows.reduce((s,d)=>s+d.pts,0);
+  const body=rows.map(d=>{
+    const fill=clamp(d.pts/DRIVER_SCALE*100,0,100);
+    const ghost=clamp(d.max/DRIVER_SCALE*100,0,100);
+    const val=d.pts===0?'—':'+'+d.pts+'<span class="dpmax">/'+d.max+'</span>';
+    return `<div class="drv${d.pts===0?' zero':''}">
+      <span class="dt" style="background:${d.color}"></span>
+      <div class="dm"><div class="dn">${d.label}</div><div class="dh">${d.hint}</div></div>
+      <div class="dbarwrap"><div class="dghost" style="width:${ghost}%"></div><div class="dfill" style="width:${fill}%;background:${d.color}"></div></div>
+      <div class="dp num">${val}</div>
+    </div>`;
+  }).join('');
+  const totalRow=`<div class="drv total">
+      <span class="dt" style="background:transparent"></span>
+      <div class="dm"><div class="dn">Raw weighted total</div></div>
+      <div class="dbarwrap"><div class="dfill" style="width:${clamp(total,0,100)}%;background:var(--ink-3)"></div></div>
+      <div class="dp num">${total}<span class="dpmax">/100</span></div>
+    </div>`;
+  return body+totalRow;
+}
+
+function renderProportionality(p,b){
+  if(!p){$('prop').innerHTML=`<div class="empty"><div class="ei">${ICON.search}</div><div class="et">Awaiting determination</div><div class="es">Run a determination to see the proportionality profile.</div></div>`;return;}
+  const tc=tierColor(p.tier);
+  const floorsHtml=(p.floors_applied&&p.floors_applied.length)?
+    `<div class="floors">${p.floors_applied.map(f=>`<div class="floor">${ICON.up}<span>${esc(f)}</span></div>`).join('')}</div>`:'';
+  $('prop').innerHTML=`
+    <div class="define"><b>What this means.</b> Proportionality calibrates <i>how much cybersecurity rigor is appropriate</i> for this entity. A higher score reflects greater size, criticality, sector importance and systemic reach — and raises the maturity bar every in-scope control must meet. <b>A higher score is not a grade</b> — it means more is expected of the entity, not that it is more compliant.</div>
+    <div class="score-hero">
+      <div class="score-dial">
+        <div class="dial-ring" style="--pct:${p.score};--ac:${tc}">
+          <div class="dial-inner"><span class="big num">${p.score}</span><span class="den num">/ 100</span></div>
+        </div>
+        <div class="tiername" style="background:${tc}">${esc(p.tier)} tier</div>
+        ${p.raw_score!==p.score?`<div class="raw num">raw ${p.raw_score} → lifted to ${p.score} by floor</div>`:''}
+      </div>
+      <div class="score-expl">
+        <div class="et">${esc(p.tier)} — what's expected</div>
+        <div class="ex">${esc(p.tier_expectation||'')}</div>
+      </div>
+    </div>
+    ${meterHtml(p.score,p.raw_score)}
+    <div class="drv-head"><span class="t">What drives this score</span><span class="h">scaled to absolute contribution</span></div>
+    <div class="drv-legend"><span><i class="lg-fill"></i>points earned</span><span><i class="lg-ghost"></i>maximum for this driver</span></div>
+    ${driversHtml(p.points)}
+    ${floorsHtml}
+    ${b?`<div class="consequence">
+      <span class="arrow">${ICON.arrow}</span>
+      <div class="ctxt">
+        <div class="ct">Resulting compliance baseline</div>
+        <div class="cv">Every in-scope control must reach <span class="lvbadge lv${b.required_level}">L${b.required_level}</span> ${esc(b.required_name)} <span style="color:var(--ink-4)">(of ${MAT_MAX} maturity levels)</span> &nbsp;<span style="color:var(--ink-4)">— ${esc(b.note||'')}</span></div>
+      </div>
+    </div>`:''}
+    <div class="disclaim">Heuristic, tunable, and carrying <b>no statutory force</b>. Weights live in the versioned ruleset; a rung is never a safe harbour. The figures above inform — they never replace — the Art 21(1) judgment of a qualified reviewer.</div>`;
+}
 
 let lastClassify=null;
 async function classify(){
-  $('cmsg').innerHTML='<div class="msg"><span class="spin"></span> classifying…</div>';
+  $('cmsg').innerHTML=`<div class="msg info"><span class="spin"></span> Running deterministic determination…</div>`;
   try{
     const r=await fetch('/classify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entityPayload())});
     const d=await r.json();lastClassify=d;$('cmsg').innerHTML='';
     if(d.status==='INSUFFICIENT_INPUT'){
-      $('result').innerHTML=`<div class="msg err"><b>INSUFFICIENT_INPUT</b> — no verdict issued.<ul>${d.reasons.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+      $('result').innerHTML=`<div class="msg err">${ICON.err}<div><b>INSUFFICIENT_INPUT</b> — no verdict issued. The engine refuses to guess on malformed facts.<ul>${d.reasons.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></div>`;
+      renderProportionality(null);
       return;
     }
-    const v=d.verdict,p=d.proportionality,b=d.bar;
-    const flagsHtml=v.flags.length?`<div class="flag">${v.flags.join('<br>')}</div>`:'';
-    $('result').innerHTML=`
-      <div class="lawband">
-        <div class="split"><span class="lawtag">The law determines</span></div>
-        <div class="kv"><span>Scope</span><b>${v.in_scope?'IN SCOPE':'OUT OF SCOPE'}</b></div>
-        <div class="kv"><span>Class</span><span class="pill cls-${v.entity_class}">${clsName(v.entity_class)}</span></div>
-        <div class="kv"><span>Size band</span><b>${v.size_band}${v.raw_size_band!==v.size_band?` (raw ${v.raw_size_band})`:''}</b></div>
-        <div class="kv"><span>Consolidated</span><b>${v.consolidated.staff} staff · ${money(v.consolidated.turnover_eur)} · ${money(v.consolidated.balance_sheet_eur)}</b></div>
-        <div class="kv"><span>Reason</span><span style="text-align:right;max-width:62%">${v.reason}</span></div>
-        <div style="margin-top:8px">${v.audit.map(a=>`<div class="audit">${a}</div>`).join('')}</div>
-        ${flagsHtml}
+    renderDetermination(d.verdict);
+    renderProportionality(d.proportionality,d.bar);
+  }catch(e){
+    $('cmsg').innerHTML='';
+    $('result').innerHTML=`<div class="msg err">${ICON.err}<div><b>Determination unavailable</b> — the request failed (${esc(e)}). Check your connection and run the determination again.</div></div>`;
+    renderProportionality(null);
+  }
+}
+
+function renderDetermination(v){
+  const flagsHtml=v.flags&&v.flags.length?`<div class="flagbox">${ICON.warn}<div>${v.flags.map(esc).join('<br>')}</div></div>`:'';
+  const auditHtml=v.audit&&v.audit.length?`<details class="audit-wrap"><summary><span class="caret">▶</span> Audit trail · ${v.audit.length} step${v.audit.length>1?'s':''}</summary>${v.audit.map(a=>`<div class="audit">${esc(a)}</div>`).join('')}</details>`:'';
+  $('result').innerHTML=`
+    <div class="verdict-hero">
+      <div class="scope-badge ${v.in_scope?'scope-in':'scope-out'}">
+        <span class="lbl">SCOPE</span><span class="val">${v.in_scope?'IN':'OUT'}</span>
       </div>
-      <div class="heurband">
-        <div class="split"><span class="heurtag">Our heuristic suggests</span> <span style="color:var(--dim);font-weight:600;text-transform:none;letter-spacing:0">no statutory force · tunable</span></div>
-        <div class="kv"><span>Proportionality score</span><b>${p.score}/100 ${p.raw_score!==p.score?`(raw ${p.raw_score})`:''}</b></div>
-        <div class="kv"><span>Tier</span><b>${p.tier}</b></div>
-        <div class="kv"><span>Required rung (every in-scope control)</span><span class="lvbadge lv${b.required_level}">L${b.required_level} · ${b.required_name}</span></div>
-        ${p.floors_applied.length?`<div class="note">floors: ${p.floors_applied.join('; ')}</div>`:''}
-        <div class="note">${b.note}</div>
-      </div>`;
-  }catch(e){$('cmsg').innerHTML=`<div class="msg err">request failed: ${e}</div>`;}
+      <div class="vmeta">
+        <div class="vrow"><span class="pill cls-${v.entity_class}">${clsName(v.entity_class)}</span></div>
+        <div class="vrow" style="margin-top:7px;color:var(--ink-3);font-size:12px">${v.in_scope?'Subject to NIS2 obligations':'Not subject to NIS2 obligations'} · Annex ${esc(v.sector_annex)}</div>
+      </div>
+    </div>
+    <div class="kvgrid">
+      <div class="kv"><div class="k">Size band</div><div class="v">${esc(v.size_band)}${v.raw_size_band!==v.size_band?` <span style="font-weight:600;color:var(--ink-4)">(raw ${esc(v.raw_size_band)})</span>`:''}</div></div>
+      <div class="kv"><div class="k">Sector annex</div><div class="v">Annex ${esc(v.sector_annex)}</div></div>
+      <div class="kv full"><div class="k">Consolidated figures · Art 6</div><div class="v sm num">${v.consolidated.staff} staff · ${money(v.consolidated.turnover_eur)} turnover · ${money(v.consolidated.balance_sheet_eur)} balance</div></div>
+    </div>
+    <div class="reasonbox">${esc(v.reason)}</div>
+    ${auditHtml}
+    ${flagsHtml}`;
 }
 
 /* ---- file upload ---- */
@@ -235,55 +750,127 @@ $('file').onchange=e=>setFiles([...e.target.files]);
 ['dragover','dragenter'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.add('over');}));
 ['dragleave','drop'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.remove('over');}));
 $('drop').addEventListener('drop',e=>setFiles([...e.dataTransfer.files]));
-function setFiles(fs){uploaded=fs;$('files').textContent=fs.length?('selected: '+fs.map(f=>f.name).join(', ')):'';}
+function fsize(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(0)+' KB';return (b/1048576).toFixed(1)+' MB';}
+function setFiles(fs){
+  uploaded=fs;
+  $('files').innerHTML=fs.length?fs.map(f=>`<div class="fileitem">${ICON.doc}<span class="fn">${esc(f.name)}</span><span class="fs num">${fsize(f.size)}</span></div>`).join(''):'';
+}
 
 async function assess(){
-  if(!uploaded.length){$('amsg').innerHTML='<div class="msg warn">Choose at least one document first.</div>';return;}
-  $('amsg').innerHTML='<div class="msg"><span class="spin"></span> ingesting → extracting (model) → scoring (deterministic)…</div>';
+  if(!uploaded.length){$('amsg').innerHTML=`<div class="msg warn">${ICON.warn}<span>Choose at least one document first.</span></div>`;return;}
+  $('amsg').innerHTML=`<div class="msg info"><span class="spin"></span> Ingesting → extracting (model) → scoring (deterministic)…</div>`;
   const fd=new FormData();
   fd.append('control_id','RM-21D-01');
   fd.append('entity',JSON.stringify(entityPayload()));
   uploaded.forEach(f=>fd.append('files',f));
   try{
     const r=await fetch('/assess/control',{method:'POST',body:fd});
-    if(r.status===503){$('amsg').innerHTML='<div class="msg warn"><b>Extraction needs a model API key.</b> The deterministic core runs offline; set <code>ANTHROPIC_API_KEY</code> on the server to enable cited extraction.</div>';return;}
-    if(!r.ok){$('amsg').innerHTML=`<div class="msg err">error ${r.status}: ${(await r.json()).detail||''}</div>`;return;}
-    const d=await r.json();$('amsg').innerHTML=`<div class="msg ok">${d.facts.length} cited fact(s) extracted; level assigned deterministically.</div>`;
+    if(r.status===503){$('amsg').innerHTML=`<div class="msg warn">${ICON.warn}<div><b>Extraction needs a model API key.</b> The deterministic core runs offline; set <code>ANTHROPIC_API_KEY</code> on the server to enable cited extraction.</div></div>`;return;}
+    if(!r.ok){$('amsg').innerHTML=`<div class="msg err">${ICON.err}<span>Error ${r.status}: ${esc((await r.json()).detail||'')}</span></div>`;return;}
+    const d=await r.json();
+    const n=d.facts.length;
+    $('amsg').innerHTML=`<div class="msg ok">${ICON.ok}<span><b>${n} cited fact${n===1?'':'s'}</b> extracted &amp; provenance-verified; maturity assigned deterministically.</span></div>`;
     renderFinding(d.finding,d.facts);
-  }catch(e){$('amsg').innerHTML=`<div class="msg err">request failed: ${e}</div>`;}
+  }catch(e){$('amsg').innerHTML=`<div class="msg err">${ICON.err}<span>Request failed: ${esc(e)}</span></div>`;}
+}
+
+function ladderHtml(achieved,required,vcls){
+  const rungs=[0,1,2,3,4].map(lv=>{
+    const attained = lv>=1 && lv<=achieved;      // L0 ("None") is never an accomplishment
+    const isAch = lv===achieved;
+    const isReq = lv===required;
+    const isMet = isReq && achieved===required;
+    const inGap = lv>achieved && lv<=required;    // rungs still owed
+    const cls=['rung', attained?'filled':'', isAch?'ach':'', isAch?vcls:'',
+               inGap?'gaprung':'', isReq?'req':'', isMet?'met':''].filter(Boolean).join(' ');
+    const flag = isReq ? (isMet
+        ? `<div class="reqflag metflag">MET<div class="tri"></div></div>`
+        : `<div class="reqflag">REQ<div class="tri"></div></div>`) : '';
+    return `<div class="${cls}" title="L${lv} · ${MAT_FULL[lv]}">${flag}<div class="bar num">L${lv}</div><div class="nm">${MAT_SHORT[lv]}</div></div>`;
+  }).join('');
+  return `<div class="ladder"><div class="ladder-rungs">${rungs}</div></div>`;
 }
 
 function renderFinding(f,facts){
   if(!f){$('findingcard').style.display='none';return;}
   $('findingcard').style.display='block';
-  const evHtml=f.evidence.map(e=>`<div class="ev"><span class="src ek-${e.evidence_kind}">${e.evidence_kind.toUpperCase()}</span> — ${e.claim}
-     <div class="q">“${e.source_quote}”</div><div class="src">${e.doc_id} · page ${e.page}</div></div>`).join('') || '<div class="note">No provenance-bearing evidence found — status insufficient_evidence.</div>';
+
+  const statusMeta={
+    meets:{t:'Meets the proportionate bar',s:'Achieved maturity is at or above the required rung.',i:ICON.ok},
+    gap:{t:'Below the proportionate bar',s:'Achieved maturity falls short of the required rung — a remediation gap.',i:ICON.warn},
+    insufficient_evidence:{t:'Insufficient evidence',s:'Not enough cited, provenance-bearing evidence to credit a maturity level.',i:ICON.err},
+  }[f.status]||{t:f.status,s:'',i:ICON.info};
+
+  const vcls = f.status==='meets' ? 'v-ok' : (f.status==='insufficient_evidence' ? 'v-bad' : 'v-gap');
+  const vcol = f.status==='meets' ? 'var(--ok)' : (f.status==='insufficient_evidence' ? 'var(--bad)' : 'var(--warn)');
+
+  // confidence lookup from the raw extracted facts
+  const confBy={};
+  (facts||[]).forEach(x=>{confBy[[x.evidence_kind,x.doc_id,x.page,(x.source_quote||'').trim()].join('|')]=x.confidence;});
+
+  const evHtml=(f.evidence&&f.evidence.length)?f.evidence.map(e=>{
+    const c=confBy[[e.evidence_kind,e.doc_id,e.page,(e.source_quote||'').trim()].join('|')];
+    let conf='';
+    if(typeof c==='number'){
+      const cc=c>=0.8?'var(--ok)':(c>=0.5?'var(--warn)':'var(--bad)');
+      conf=`<span class="conf" title="extraction confidence">${Math.round(c*100)}%<span class="cbar"><span class="cbf" style="width:${Math.round(c*100)}%;background:${cc}"></span></span></span>`;
+    }
+    return `<div class="ev ${e.evidence_kind}">
+      <div class="ev-top"><span class="ektag ${e.evidence_kind}">${e.evidence_kind}</span><span class="claim">${esc(e.claim)}</span>${conf}</div>
+      <div class="quote">“${esc(e.source_quote)}”</div>
+      <div class="cite">${ICON.doc}${esc(e.doc_id)} · page ${esc(e.page)}</div>
+    </div>`;
+  }).join(''):`<div class="msg warn" style="margin-top:0">${ICON.warn}<span>No provenance-bearing evidence found — status <b>insufficient_evidence</b>.</span></div>`;
+
+  const gapPill=f.gap===0?`<span class="gappill gp-0">Meets — no gap</span>`:`<span class="gappill gp-n">Gap of ${f.gap} rung${f.gap>1?'s':''}</span>`;
+
   $('finding').innerHTML=`
-    <div class="heurband">
-      <div class="split"><span class="heurtag">Our heuristic suggests</span></div>
-      <div class="kv"><span>Achieved</span><span class="lvbadge lv${f.achieved_level}">L${f.achieved_level} · ${f.achieved_name}</span></div>
-      <div class="kv"><span>Required</span><span class="lvbadge lv${f.required_level}">L${f.required_level} · ${f.required_name}</span></div>
-      <div class="kv"><span>Gap</span><b>${f.gap}</b></div>
-      <div class="kv"><span>Status</span><b>${f.status}</b></div>
-      <div class="note">${f.rationale}</div>
+    <div class="status-banner sb-${f.status}">
+      <div class="si">${statusMeta.i}</div>
+      <div class="st"><div class="stt">${statusMeta.t}</div><div class="sts">${statusMeta.s}</div></div>
+      ${gapPill}
     </div>
-    <h2 style="font-size:13px;color:var(--navy);margin:10px 0 2px">Cited evidence</h2>
+
+    ${ladderHtml(f.achieved_level,f.required_level,vcls)}
+    <div class="ladder-legend">
+      <span class="ll-item"><span class="lvbadge" style="background:${vcol}">L${f.achieved_level}</span> Achieved · <span class="lk">${esc(f.achieved_name)}</span></span>
+      <span class="ll-item"><span style="color:var(--heur);font-weight:800;font-size:11px">▼ REQ</span> <span class="lvbadge" style="background:var(--heur)">L${f.required_level}</span> Required · <span class="lk">${esc(f.required_name)}</span></span>
+    </div>
+
+    <div class="cov">
+      <div class="covcell">
+        <div class="cl">Design completeness <b class="num">${Math.round(f.design_done*100)}%</b></div>
+        <div class="covtrack"><div class="covfill design" style="width:${Math.round(f.design_done*100)}%"></div></div>
+        <div class="cn">The control as written, evidenced.</div>
+      </div>
+      <div class="covcell">
+        <div class="cl">Operating completeness <b class="num">${Math.round(f.operating_done*100)}%</b></div>
+        <div class="covtrack"><div class="covfill operating" style="width:${Math.round(f.operating_done*100)}%"></div></div>
+        <div class="cn">Proof the control actually ran.</div>
+      </div>
+    </div>
+
+    <div class="ev-head"><h3>${ICON.search} Cited evidence</h3><span class="cnt">${f.evidence?f.evidence.length:0} item${(f.evidence&&f.evidence.length===1)?'':'s'} · ${esc(f.nis2_ref||'')}</span></div>
     ${evHtml}
-    <div class="note">${f.draft}</div>`;
+
+    <div class="rationale">${esc(f.rationale)}</div>
+    <div class="draftnote">${ICON.warn}${esc(f.draft||'DRAFT — REQUIRES REVIEW')}</div>`;
 }
 
 async function snapshot(){
-  $('smsg').innerHTML='<div class="msg"><span class="spin"></span> building…</div>';
+  $('smsg').innerHTML=`<div class="msg info"><span class="spin"></span> Building re-derivable snapshot…</div>`;
   try{
     const r=await fetch('/snapshot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({inputs:entityPayload(),control_id:'RM-21D-01'})});
     const d=await r.json();
     const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);const a=document.createElement('a');
     a.href=url;a.download=`atlas_snapshot_${(d.content_sha256||'na').slice(0,12)}.json`;a.click();URL.revokeObjectURL(url);
-    $('smsg').innerHTML=`<div class="msg ok">snapshot ${d.status} · content_sha256 <code>${(d.content_sha256||'').slice(0,16)}…</code></div>`;
-  }catch(e){$('smsg').innerHTML=`<div class="msg err">request failed: ${e}</div>`;}
+    $('smsg').innerHTML=`<div class="msg ok">${ICON.ok}<span>Snapshot <b>${esc(d.status)}</b> · content_sha256 <code>${esc((d.content_sha256||'').slice(0,16))}…</code></span></div>`;
+  }catch(e){$('smsg').innerHTML=`<div class="msg err">${ICON.err}<span>Request failed: ${esc(e)}</span></div>`;}
 }
 
+$('result').innerHTML=`<div class="empty"><div class="ei">${ICON.search}</div><div class="et">Awaiting determination</div><div class="es">Enter entity facts and run a determination.</div></div>`;
+renderProportionality(null);
 classify();
 </script>
 </body>
