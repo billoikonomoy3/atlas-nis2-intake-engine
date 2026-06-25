@@ -9,5 +9,6 @@ uvicorn>=0.27
 python-multipart>=0.0.9
 pypdf>=4.0
 python-docx>=1.1
-# Optional, extraction layer only:
-# anthropic>=0.40
+# Extraction layer (model calls). Needs ANTHROPIC_API_KEY set at runtime;
+# without the key, /extract and /assess/control fail closed with 503.
+anthropic>=0.40
