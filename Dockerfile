@@ -27,12 +27,13 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md server.py ./
 COPY atlas ./atlas
 COPY ruleset ./ruleset
 COPY frontend ./frontend
 
 EXPOSE 8000
 
-# The container runs the API from the source tree. Tests are not run here; CI runs them offline.
-CMD ["sh", "-c", "uvicorn atlas.api.main:app --host 0.0.0.0 --port ${PORT}"]
+# The container runs the API from the source tree via the single entrypoint. server.py
+# binds 0.0.0.0:$PORT. Tests are not run here; CI runs them offline.
+CMD ["python", "server.py"]
