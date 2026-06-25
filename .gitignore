@@ -12,3 +12,7 @@ venv/
 .coverage
 coverage.xml
 .pytest_cache/
+
+# Local environment / secrets (e.g. ANTHROPIC_API_KEY) — never commit
+.env
+.env.*

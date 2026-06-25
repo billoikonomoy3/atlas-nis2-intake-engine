@@ -6,26 +6,122 @@ human where the source names none — no judgment leakage), (3) splits incident 
 a Cbw-meldplicht track and a separate GDPR datalek track, and (4) checks the
 registratieplicht was actually filed. Pure data + pure functions, offline.
 
-Legally precise as of 25 June 2026. DRAFT — REQUIRES REVIEW.
+The dated legal "in-force" status is a SINGLE structured fact of law (IN_FORCE_STATUS,
+below). Every report line and every "Wbni still governs" clause is DERIVED from it, so the
+status lives in exactly one place. Legally precise as of IN_FORCE_STATUS["as_of"].
+DRAFT — REQUIRES REVIEW.
 """
 
 from __future__ import annotations
 
 DRAFT = "DRAFT — REQUIRES REVIEW"
 
-GOVERNING_LAW = {
-    "current_statute": "Wet beveiliging netwerk- en informatiesystemen (Wbni) — the Dutch NIS1 "
-        "implementing statute — remains the enforceable law as of 25 June 2026.",
-    "future_statute": "Cyberbeveiligingswet (Cbw), Eerste Kamer dossier 36.764 — the NIS2 "
-        "transposition; repeals the Wbni on entry into force (prospectively).",
-    "status_note": "As of 25 June 2026 the Cbw is NOT YET IN FORCE: passed the Tweede Kamer "
-        "15 April 2026, in Eerste Kamer procedure. Entry is by koninklijk besluit on a date "
-        "still to be set, and may be staggered per article.",
-    "line_for_report": "Prepared against the Netherlands Cyberbeveiligingswet (Cbw, dossier "
-        "36.764); as of 25 June 2026 the Cbw is not yet in force and today's enforceable "
-        "liability remains under the Wet beveiliging netwerk- en informatiesystemen (Wbni / "
-        "NIS1), which the Cbw repeals on entry into force by koninklijk besluit.",
+# --- The dated legal status: ONE structured, testable fact of law -----------------------
+# GIVEN facts as of 2026-06-25 (do NOT invent; re-verify against the sources if as_of moves):
+#   - Cbw, Eerste Kamer dossier 36.764.
+#   - Tweede Kamer (lower house) adopted it 2026-04-15.
+#   - Eerste Kamer (upper house) plenary vote pending as of 2026-06-25.
+#   - Targeted commencement 2026-07-01; until commencement the Wbni still governs.
+# Sources:
+#   https://www.eerstekamer.nl/wetsvoorstel/36764_cyberbeveiligingswet
+#   https://www.rijksoverheid.nl/actueel/nieuws/2026/04/15/tweede-kamer-stemt-in-met-wetsvoorstellen-cyberbeveiligingswet-en-wet-weerbaarheid-kritieke-entiteiten
+# If Atlas is run on/after review_by, these must NOT be silently trusted — the non-gating
+# freshness canary (tests/test_jurisdiction_freshness.py) fails then as a staleness alarm.
+IN_FORCE_STATUS_ENUM = (
+    "in_progress",
+    "adopted_lower_house_pending_upper_house",
+    "passed_pending_commencement",
+    "in_force",
+)
+
+IN_FORCE_STATUS = {
+    "statute": "Cyberbeveiligingswet (Cbw)",
+    "dossier": "36.764",
+    "status": "adopted_lower_house_pending_upper_house",
+    "eerste_kamer_status": "pending_plenary_vote",
+    "governing_statute_until_commencement": "Wbni",
+    "tweede_kamer_passed": "2026-04-15",
+    "targeted_commencement": "2026-07-01",
+    "as_of": "2026-06-25",
+    "review_by": "2026-07-01",
+    "sources": [
+        "https://www.eerstekamer.nl/wetsvoorstel/36764_cyberbeveiligingswet",
+        "https://www.rijksoverheid.nl/actueel/nieuws/2026/04/15/tweede-kamer-stemt-in-met-wetsvoorstellen-cyberbeveiligingswet-en-wet-weerbaarheid-kritieke-entiteiten",
+    ],
+    "statutory": True,  # a fact of law, not a heuristic
 }
+
+# Descriptive expansion of the statute that governs until commencement (a label, NOT a
+# status claim — the status itself lives only in IN_FORCE_STATUS).
+_GOVERNING_STATUTE_LONG = {
+    "Wbni": "Wet beveiliging netwerk- en informatiesystemen (Wbni)",
+}
+
+_MONTHS = ("January", "February", "March", "April", "May", "June", "July",
+           "August", "September", "October", "November", "December")
+
+
+def _human_date(iso: str) -> str:
+    """'2026-04-15' -> '15 April 2026'. Pure; reads no clock, no locale dependence."""
+    y, m, d = (int(part) for part in iso.split("-"))
+    return f"{d} {_MONTHS[m - 1]} {y}"
+
+
+# Present-tense reading of each enum value — the single source of the status phrasing.
+_STATUS_PROSE = {
+    "in_progress": "is in parliamentary procedure",
+    "adopted_lower_house_pending_upper_house":
+        "has been adopted by the Tweede Kamer and awaits the Eerste Kamer plenary vote",
+    "passed_pending_commencement":
+        "has passed both houses and awaits commencement by koninklijk besluit",
+    "in_force": "is in force",
+}
+
+
+def _prospective_clause(s: dict) -> str:
+    """Derived 'not enforceable until entry' / 'in force' qualifier — never hardcoded twice."""
+    if s["status"] == "in_force":
+        return f"the {s['statute']} is in force as of {_human_date(s['as_of'])}"
+    return (f"the {s['statute']} is prospective — not enforceable until commencement "
+            f"(targeted {_human_date(s['targeted_commencement'])}); until then the "
+            f"{s['governing_statute_until_commencement']} governs")
+
+
+def _derive_governing_law(s: dict) -> dict:
+    """Build the report lines FROM IN_FORCE_STATUS — the single source of the dated legal
+    status. No date or status string is hardcoded a second time."""
+    in_force = s["status"] == "in_force"
+    governs_long = _GOVERNING_STATUTE_LONG.get(
+        s["governing_statute_until_commencement"], s["governing_statute_until_commencement"])
+    asof, tk, target = (_human_date(s["as_of"]), _human_date(s["tweede_kamer_passed"]),
+                        _human_date(s["targeted_commencement"]))
+    status_phrase = _STATUS_PROSE[s["status"]]
+    return {
+        "current_statute": (
+            f"{governs_long} — the Dutch NIS1 implementing statute — "
+            f"{'no longer governs' if in_force else 'remains the enforceable law'} "
+            f"as of {asof}."),
+        "future_statute": (
+            f"{s['statute']}, Eerste Kamer dossier {s['dossier']} — the NIS2 transposition; "
+            f"repeals the {s['governing_statute_until_commencement']} on entry into force "
+            f"(prospectively)."),
+        "status_note": (
+            f"As of {asof} the {s['statute']} {status_phrase} (dossier {s['dossier']}; "
+            f"Tweede Kamer passage {tk}; Eerste Kamer "
+            f"{s['eerste_kamer_status'].replace('_', ' ')}; targeted commencement {target} "
+            f"by koninklijk besluit, possibly staggered per article). "
+            + ("In force." if in_force else
+               f"NOT YET IN FORCE — the {s['governing_statute_until_commencement']} still governs.")),
+        "line_for_report": (
+            f"Prepared against the Netherlands {s['statute']} (dossier {s['dossier']}); "
+            f"as of {asof} the Cbw {status_phrase} and "
+            + ("the Cbw now governs." if in_force else
+               f"today's enforceable liability remains under the {governs_long} / NIS1, which "
+               f"the Cbw repeals on entry into force by koninklijk besluit (targeted {target}).")),
+    }
+
+
+GOVERNING_LAW = _derive_governing_law(IN_FORCE_STATUS)
 
 _RDI = ("RDI", "Rijksinspectie Digitale Infrastructuur")
 _IGJ = ("IGJ", "Inspectie Gezondheidszorg en Jeugd")
@@ -106,9 +202,10 @@ INCIDENT_SPLIT = {
     "datalek_track": "GDPR datalek (Art 33/34): a personal-data breach in the same event -> a "
         "separate notification to the Autoriteit Persoonsgegevens, in principle within 72h, plus "
         "communication to affected individuals where high risk. Distinct legal basis, authority, portal.",
-    "note": "ONE EVENT CAN TRIGGER BOTH, down different portals, on parallel-but-distinct clocks; "
-        "satisfying one does NOT discharge the other. The Cbw track is prospective (not enforceable "
-        "until Cbw entry); the GDPR/AP datalek track is enforceable TODAY.",
+    "note": ("ONE EVENT CAN TRIGGER BOTH, down different portals, on parallel-but-distinct "
+        "clocks; satisfying one does NOT discharge the other. Cbw track: "
+        f"{_prospective_clause(IN_FORCE_STATUS)}. The GDPR/AP datalek track is enforceable "
+        "TODAY, independent of the Cbw."),
 }
 
 ART20_LIABILITY = {
@@ -154,6 +251,7 @@ def jurisdiction_pack(*, sector: str | None, is_ecomms: bool, in_scope: bool,
     sup = supervisor_for(sector or "", is_ecomms=is_ecomms)
     liability = entity_class in ("essential", "important")
     return {
+        "in_force_status": IN_FORCE_STATUS,
         "governing_law": GOVERNING_LAW["line_for_report"],
         "supervisor": sup,
         "reporting_clocks": REPORTING_CLOCKS,

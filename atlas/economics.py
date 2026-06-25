@@ -1,13 +1,28 @@
-"""Atlas — the pyramid economics (preserved from the prior build).
+"""Atlas — the pyramid economics — HEURISTIC, tunable, NO statutory force.
 
 Quantifies, honestly, the Stage 4-7 first-pass cost Atlas collapses. Pure deterministic
 code, no LLM, no network: every EUR figure is hand-re-derivable via ONE chain off the
 low-end fee. It produces NO legal pass/fail and collapses COST, not LIABILITY. Kept here
 (not in the judgment path) so the prior work is not lost in the restructure.
+
+Like the proportionality weights, EVERY constant and EVERY EUR output here is a judgment
+call that carries no statutory force and is tunable — it informs, never determines,
+anything legal. Each constant's justification is an open item for a human, mirroring the
+README open-items section: TODO: REVIEW — justify these constants.
 """
 
 from __future__ import annotations
 
+# Mirror of the law/heuristic split (cf. proportionality.py, README §"law determines vs.
+# heuristic suggests"): the economics is ENTIRELY the "our heuristic suggests" side —
+# never law. Tag carried on the compute() output so no EUR figure reads as statutory.
+STATUTORY_FORCE = False
+HEURISTIC_TAG = {"statutory": False, "heuristic": True, "tunable": True,
+                 "basis": "internal cost-collapse estimate; no statutory force; not a quote"}
+
+# TODO: REVIEW — justify these constants. Every value below is a tunable HEURISTIC with NO
+# statutory force (mirrors ruleset `heuristic_weights`, whose rationale is likewise an open
+# README TODO). They drive a cost estimate only — never a legal pass/fail or liability.
 DEFAULTS = {
     "manager_month_fee_eur": 180_000,
     "working_days_per_month": 260 / 12,
@@ -57,6 +72,16 @@ def compute(**overrides) -> dict:
         "headline_claim_eur": headline_claim,
         "hours_freed": hours_freed,
         "hours_kept_human": hours_kept_human,
+        # --- Label every EUR output: HEURISTIC / tunable / no statutory force ----------
+        # (mirrors how proportionality weights are tagged; see HEURISTIC_TAG above).
+        "statutory": False,
+        "heuristic": True,
+        "tunable": True,
+        "eur_outputs": ["day_sell_eur", "junior_day_rate_eur", "junior_hourly_eur",
+                        "manual_cost_eur", "cost_collapsed_eur", "headline_claim_eur"],
+        "disclaimer": ("Every *_eur figure here is a HEURISTIC, tunable estimate with NO "
+                       "statutory force — a derived range, not a quote. "
+                       "TODO: REVIEW — justify these constants."),
     }
 
 

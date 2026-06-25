@@ -22,11 +22,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Run tests with coverage
+      - name: Run gated tests with coverage (freshness canary deselected)
         run: |
-          coverage run -m pytest -q
+          coverage run -m pytest -q -m "not freshness"
           coverage report -m
           coverage xml
+
+      # Non-gating staleness alarm: surfaces the Cbw re-verification warning in the logs
+      # WITHOUT failing the build or flipping the badge red. Expected to fail on/after the
+      # IN_FORCE_STATUS review_by date — that is the intended signal, not a broken build.
+      - name: Freshness canary (non-gating — never fails the build)
+        continue-on-error: true
+        run: pytest -q -m freshness
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4

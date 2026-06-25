@@ -32,3 +32,8 @@ include = ["atlas*"]
 pythonpath = ["."]
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+    # Non-gating staleness canary. Deselected in the gated CI run (`-m 'not freshness'`)
+    # and run separately with continue-on-error so it never flips the public badge red.
+    "freshness: time-dependent staleness alarm; designed to fail on/after a review_by date",
+]

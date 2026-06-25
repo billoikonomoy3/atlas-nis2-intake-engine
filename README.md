@@ -163,5 +163,10 @@ force**. They must be justified by a person, not by this tool:
 
 Depth on **one control end-to-end** (`RM-21D-01`) before breadth. No DORA / CSRD /
 multi-regulation work, and no extra controls were added. The Netherlands overlay is
-precise as of **25 June 2026** (Cbw, dossier 36.764, **not yet in force** — the Wbni
-still governs).
+precise as of **25 June 2026** (Cbw, dossier 36.764): **adopted by the Tweede Kamer on
+15 April 2026**, **awaiting the Eerste Kamer plenary vote**, with **targeted commencement
+1 July 2026** — until then the **Wbni** still governs. The dated status is a single
+structured field (`atlas/jurisdiction.py › IN_FORCE_STATUS`) from which every report line
+is derived; a **non-gating freshness canary** (`tests/test_jurisdiction_freshness.py`,
+`-m freshness`) is set to fail on/after **1 July 2026** as a re-verification alarm without
+flipping the CI badge.
