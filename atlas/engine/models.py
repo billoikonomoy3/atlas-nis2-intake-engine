@@ -21,7 +21,8 @@ EntityClass = Literal["essential", "important", "out_of_scope", "deferred_design
 SizeBand = Literal["large", "medium", "below_medium"]
 Tier = Literal["Foundational", "Standard", "Enhanced", "Critical"]
 EvidenceKind = Literal["design", "operating"]
-FindingStatus = Literal["meets", "gap", "insufficient_evidence"]
+# "vetoed": a disqualifying finding defeats the control regardless of the rung ratios.
+FindingStatus = Literal["meets", "gap", "insufficient_evidence", "vetoed"]
 
 
 # ---------------------------------------------------------------------------
@@ -183,6 +184,24 @@ class EvidenceRef(BaseModel):
     page: int
 
 
+class Veto(BaseModel):
+    """A disqualifying ("veto") finding: cited content whose MEANING defeats the control.
+
+    Deterministic — produced by ``atlas/engine/veto.py`` over the cited facts, never by a
+    model. It carries the NIS2 reference it defeats (statutory) and a short rationale, plus
+    the offending quote + locator, so a reader can see WHY the control was capped. Presence
+    of such a clause is a defect, not evidence of conformance.
+    """
+
+    veto_id: str = Field(..., json_schema_extra=HEURISTIC)
+    defeats_ref: str = Field(..., json_schema_extra=STATUTORY)  # the NIS2 article it defeats
+    rationale: str = Field(..., json_schema_extra=HEURISTIC)
+    detail: str = Field("", json_schema_extra=HEURISTIC)
+    matched_quote: str = Field(..., json_schema_extra=HEURISTIC)
+    doc_id: str = Field(..., json_schema_extra=HEURISTIC)
+    page: int = Field(..., json_schema_extra=HEURISTIC)
+
+
 class Finding(BaseModel):
     """A deterministic, cited control finding. No model call produced any of this."""
 
@@ -197,6 +216,8 @@ class Finding(BaseModel):
     design_done: float = Field(..., json_schema_extra=HEURISTIC)
     operating_done: float = Field(..., json_schema_extra=HEURISTIC)
     evidence: list[EvidenceRef] = Field(default_factory=list, json_schema_extra=HEURISTIC)
+    vetoes: list[Veto] = Field(default_factory=list, json_schema_extra=HEURISTIC)
+    veto_capped: bool = Field(False, json_schema_extra=HEURISTIC)
     rationale: str = Field(..., json_schema_extra=HEURISTIC)
     draft: str = Field("DRAFT — REQUIRES REVIEW", json_schema_extra=HEURISTIC)
 

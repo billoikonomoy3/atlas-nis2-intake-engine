@@ -21,6 +21,7 @@ from __future__ import annotations
 from . import ruleset as R
 from .baseline import maturity_name
 from .models import Bar, EvidenceRef, ExtractedFact, Finding
+from .veto import evaluate_vetoes
 
 
 def _valid_facts(control_id: str, facts: list[ExtractedFact]) -> list[ExtractedFact]:
@@ -99,6 +100,19 @@ def score_control(control_id: str, facts: list[ExtractedFact], bar: Bar | int) -
     else:
         status = "gap"
 
+    # Disqualifying ("veto") findings — deterministic, pure code over the SAME cited
+    # facts (no model). A control with ZERO active vetoes falls straight through this
+    # block unchanged, so its score is byte-identical to before this feature existed.
+    # One or more active vetoes mean a documented clause DEFEATS the control: cap the
+    # achieved rung at L1, recompute the gap, and force a "vetoed" status so the output
+    # can never read as "meets" regardless of the design/operating ratios.
+    vetoes = evaluate_vetoes(control_id, kept)
+    veto_capped = bool(vetoes)
+    if veto_capped:
+        achieved = min(achieved, 1)
+        gap = max(0, required - achieved)
+        status = "vetoed"
+
     # Deterministic evidence ordering (no clock, no model).
     evidence = [
         EvidenceRef(evidence_kind=f.evidence_kind, claim=f.claim, source_quote=f.source_quote,
@@ -113,6 +127,13 @@ def score_control(control_id: str, facts: list[ExtractedFact], bar: Bar | int) -
         f"({maturity_name(achieved)}); required L{required} ({maturity_name(required)}); "
         f"gap {gap}; status {status}. Heuristic rung — NIS2 Art 21(1) is outcomes-based."
     )
+    if veto_capped:
+        refs = ", ".join(sorted({v.defeats_ref for v in vetoes if v.defeats_ref}))
+        rationale += (
+            f" VETO — {len(vetoes)} disqualifying finding(s) cap the achieved rung at L1"
+            f"{f' (defeats {refs})' if refs else ''}: documented content defeats the control "
+            f"(presence != conformance). See vetoes[] for the cited clause(s)."
+        )
 
     return Finding(
         control_id=control_id,
@@ -126,5 +147,7 @@ def score_control(control_id: str, facts: list[ExtractedFact], bar: Bar | int) -
         design_done=round(design_done, 4),
         operating_done=round(operating_done, 4),
         evidence=evidence,
+        vetoes=vetoes,
+        veto_capped=veto_capped,
         rationale=rationale,
     )

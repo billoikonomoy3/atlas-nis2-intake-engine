@@ -104,6 +104,11 @@ def criteria() -> list[dict[str, Any]]:
     return ruleset()["criteria"]
 
 
+def veto_rules() -> list[dict[str, Any]]:
+    """Disqualifying-finding rules (data-driven). Empty if the ruleset defines none."""
+    return ruleset().get("vetoes", [])
+
+
 @lru_cache(maxsize=1)
 def criteria_by_id() -> dict[str, dict[str, Any]]:
     return {c["id"]: c for c in criteria()}

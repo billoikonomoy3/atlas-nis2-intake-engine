@@ -1,0 +1,21 @@
+{
+  "_comment": "Extracted findings for control RM-21D-01 from the deliberately non-conformant mock2 policy. mock2.docx itself is not committed, so this captures what the extraction layer LOCATES + QUOTES from it (design clauses on the supply-chain topic, several of which ARE the defects, and zero operating evidence). Used by tests/test_veto.py to regression-test the deterministic veto path: 13 design signals push design_done to 1.00 (and therefore L2/meets before the veto feature), while the 30-calendar-day supplier breach-notification window disqualifies the control.",
+  "control_id": "RM-21D-01",
+  "doc_id": "mock2.docx",
+  "required_level": 2,
+  "facts": [
+    {"evidence_kind": "design", "claim": "supplier security policy exists", "source_quote": "Supplier Security Policy v1.0 governs third-party relationships", "doc_id": "mock2.docx", "page": 1, "confidence": 0.92},
+    {"evidence_kind": "design", "claim": "criticality rating at onboarding", "source_quote": "Each supplier is assigned a criticality rating at onboarding", "doc_id": "mock2.docx", "page": 1, "confidence": 0.9},
+    {"evidence_kind": "design", "claim": "supplier breach-notification window", "source_quote": "Suppliers must notify us of a security breach within 30 calendar days", "doc_id": "mock2.docx", "page": 2, "confidence": 0.95},
+    {"evidence_kind": "design", "claim": "diligence is self-attestation only", "source_quote": "Supplier due diligence is satisfied by vendor self-attestation only", "doc_id": "mock2.docx", "page": 2, "confidence": 0.9},
+    {"evidence_kind": "design", "claim": "fourth parties excluded", "source_quote": "Fourth parties and sub-processors are excluded from this policy", "doc_id": "mock2.docx", "page": 3, "confidence": 0.9},
+    {"evidence_kind": "design", "claim": "existing suppliers grandfathered", "source_quote": "Existing suppliers are grandfathered and not reassessed", "doc_id": "mock2.docx", "page": 3, "confidence": 0.9},
+    {"evidence_kind": "design", "claim": "verbal onboarding approval", "source_quote": "Onboarding approval may be granted verbally by the sponsor", "doc_id": "mock2.docx", "page": 4, "confidence": 0.88},
+    {"evidence_kind": "design", "claim": "confidentiality clause in contracts", "source_quote": "Standard contracts include a confidentiality clause", "doc_id": "mock2.docx", "page": 4, "confidence": 0.85},
+    {"evidence_kind": "design", "claim": "right-to-audit only where practical", "source_quote": "A right-to-audit clause may be requested where practical", "doc_id": "mock2.docx", "page": 5, "confidence": 0.85},
+    {"evidence_kind": "design", "claim": "good industry practice", "source_quote": "Suppliers should follow good industry practice", "doc_id": "mock2.docx", "page": 5, "confidence": 0.8},
+    {"evidence_kind": "design", "claim": "supplier register maintained", "source_quote": "A supplier register is maintained by procurement", "doc_id": "mock2.docx", "page": 6, "confidence": 0.88},
+    {"evidence_kind": "design", "claim": "security requirements in MSA", "source_quote": "Security requirements are referenced in the MSA template", "doc_id": "mock2.docx", "page": 6, "confidence": 0.85},
+    {"evidence_kind": "design", "claim": "third-party risk owner", "source_quote": "The CISO owns the third-party risk procedure", "doc_id": "mock2.docx", "page": 7, "confidence": 0.9}
+  ]
+}

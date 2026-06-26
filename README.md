@@ -77,6 +77,7 @@ atlas/
       proportionality.py        additive weighted score -> tier                            [HEURISTIC]
       baseline.py               required rung per control from tier                        [HEURISTIC]
       scoring.py                facts -> maturity level -> cited Finding (NO model)         [HEURISTIC]
+      veto.py                   disqualifying findings: cited content that defeats a control [HEURISTIC]
       snapshot.py               content_sha256 over everything except generated_at
     extraction/
       ingest.py                 PDF/DOCX/TXT -> page-tagged chunks (offline)
@@ -91,6 +92,24 @@ atlas/
 
 **One source of truth for the law.** The deterministic engine exists in exactly one
 place (`atlas/engine`). The frontend calls the API; it embeds no engine.
+
+### Disqualifying ("veto") findings — presence ≠ conformance
+
+The maturity rung credits whether a control is **documented**. That alone can produce a
+false negative: a policy can be *full* of supply-chain clauses (high `design_done`) while
+several of those clauses are themselves the defect. A **veto** closes that gap — when a
+control's own cited evidence contains a clause whose **content defeats** the outcome, the
+achieved rung is capped at **L1**, the gap recomputed, and the status set to **`vetoed`**
+(never `meets`), with the offending clause surfaced on the Finding (`vetoes[]`) so a reader
+sees *why* it failed.
+
+Veto rules are **data** (`ruleset/nis2_v1.yaml › vetoes`), evaluated by **pure
+deterministic code** (`atlas/engine/veto.py`) over the already-cited facts — **no model**
+in the path. The seed rule encodes the supply-chain archetype: a supplier
+incident-notification window longer than the entity's own **Art 23** cascade (early warning
+≤24h, notification ≤72h) leaves it unable to meet its statutory reporting duty. A control
+with **zero** active vetoes scores exactly as before. Like the rungs themselves, a veto is a
+tunable heuristic, **not** a safe harbour. Adding a veto is a YAML edit, not a code change.
 
 ---
 

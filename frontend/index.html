@@ -277,6 +277,22 @@
   .sb-gap .si{background:var(--warn);color:#fff}.sb-gap .stt{color:#7a5200}.sb-gap .sts{color:#876200}
   .sb-insufficient_evidence{background:var(--bad-soft);border:1px solid var(--bad-line)}
   .sb-insufficient_evidence .si{background:var(--bad);color:#fff}.sb-insufficient_evidence .stt{color:#8e1d14}.sb-insufficient_evidence .sts{color:#9a3127}
+  .sb-vetoed{background:var(--bad-soft);border:1px solid var(--bad-line)}
+  .sb-vetoed .si{background:var(--bad);color:#fff}.sb-vetoed .stt{color:#8e1d14}.sb-vetoed .sts{color:#9a3127}
+
+  /* disqualifying (veto) findings */
+  .veto-head{display:flex;align-items:center;justify-content:space-between;margin:20px 0 9px}
+  .veto-head h3{margin:0;font-size:12.5px;font-weight:800;letter-spacing:.2px;color:var(--bad);display:flex;align-items:center;gap:8px}
+  .veto-head h3 svg{width:15px;height:15px}
+  .veto-head .cnt{font-size:11px;font-weight:700;color:var(--bad)}
+  .vetobox{border:1px solid var(--bad-line);border-left:3px solid var(--bad);border-radius:var(--r-sm);padding:12px 13px;margin:9px 0;background:var(--bad-soft);overflow:hidden}
+  .vetobox .vtop{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px}
+  .vetobox .vtag{font-size:9.5px;font-weight:850;letter-spacing:.6px;padding:3px 8px;border-radius:5px;text-transform:uppercase;background:var(--bad);color:#fff}
+  .vetobox .vref{font-family:var(--mono);font-size:10.5px;font-weight:700;color:#8e1d14}
+  .vetobox .vrat{font-size:12.5px;color:#7a241c;line-height:1.55;overflow-wrap:anywhere}
+  .vetobox .vdet{font-family:var(--mono);font-size:11px;color:#9a3127;margin-top:6px;overflow-wrap:anywhere}
+  .vetobox .quote{font-style:italic;color:#7a241c;font-size:12px;line-height:1.55;border-left:2px solid var(--bad-line);padding:2px 0 2px 11px;margin:9px 0 8px;overflow-wrap:anywhere}
+  .vetobox .cite{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:#9a3127;font-weight:600;overflow-wrap:anywhere}
 
   /* maturity ladder — colored by RELATIONSHIP (attained / achieved-verdict / owed / required), not level identity */
   .ladder{margin:6px 0 4px}
@@ -799,10 +815,12 @@ function renderFinding(f,facts){
     meets:{t:'Meets the proportionate bar',s:'Achieved maturity is at or above the required rung.',i:ICON.ok},
     gap:{t:'Below the proportionate bar',s:'Achieved maturity falls short of the required rung — a remediation gap.',i:ICON.warn},
     insufficient_evidence:{t:'Insufficient evidence',s:'Not enough cited, provenance-bearing evidence to credit a maturity level.',i:ICON.err},
+    vetoed:{t:'Disqualified by a veto finding',s:'A documented clause defeats this control — the achieved rung is capped at L1 regardless of completeness.',i:ICON.err},
   }[f.status]||{t:f.status,s:'',i:ICON.info};
 
-  const vcls = f.status==='meets' ? 'v-ok' : (f.status==='insufficient_evidence' ? 'v-bad' : 'v-gap');
-  const vcol = f.status==='meets' ? 'var(--ok)' : (f.status==='insufficient_evidence' ? 'var(--bad)' : 'var(--warn)');
+  const fail = f.status==='insufficient_evidence' || f.status==='vetoed';
+  const vcls = f.status==='meets' ? 'v-ok' : (fail ? 'v-bad' : 'v-gap');
+  const vcol = f.status==='meets' ? 'var(--ok)' : (fail ? 'var(--bad)' : 'var(--warn)');
 
   // confidence lookup from the raw extracted facts
   const confBy={};
@@ -822,7 +840,17 @@ function renderFinding(f,facts){
     </div>`;
   }).join(''):`<div class="msg warn" style="margin-top:0">${ICON.warn}<span>No provenance-bearing evidence found — status <b>insufficient_evidence</b>.</span></div>`;
 
-  const gapPill=f.gap===0?`<span class="gappill gp-0">Meets — no gap</span>`:`<span class="gappill gp-n">Gap of ${f.gap} rung${f.gap>1?'s':''}</span>`;
+  const gapPill=f.status==='vetoed'?`<span class="gappill gp-n">Disqualified · capped at L1</span>`:(f.gap===0?`<span class="gappill gp-0">Meets — no gap</span>`:`<span class="gappill gp-n">Gap of ${f.gap} rung${f.gap>1?'s':''}</span>`);
+
+  const vetoHtml=(f.vetoes&&f.vetoes.length)?`
+    <div class="veto-head"><h3>${ICON.err} Disqualifying findings</h3><span class="cnt">${f.vetoes.length} veto${f.vetoes.length===1?'':'es'} · caps the rung at L1</span></div>
+    ${f.vetoes.map(v=>`<div class="vetobox">
+      <div class="vtop"><span class="vtag">Veto</span><span class="vref">defeats ${esc(v.defeats_ref||'')}</span></div>
+      <div class="vrat">${esc(v.rationale||'')}</div>
+      ${v.detail?`<div class="vdet">${esc(v.detail)}</div>`:''}
+      ${v.matched_quote?`<div class="quote">“${esc(v.matched_quote)}”</div>`:''}
+      <div class="cite">${ICON.doc}${esc(v.doc_id||'')} · page ${esc(v.page)}</div>
+    </div>`).join('')}`:'';
 
   $('finding').innerHTML=`
     <div class="status-banner sb-${f.status}">
@@ -852,6 +880,7 @@ function renderFinding(f,facts){
 
     <div class="ev-head"><h3>${ICON.search} Cited evidence</h3><span class="cnt">${f.evidence?f.evidence.length:0} item${(f.evidence&&f.evidence.length===1)?'':'s'} · ${esc(f.nis2_ref||'')}</span></div>
     ${evHtml}
+    ${vetoHtml}
 
     <div class="rationale">${esc(f.rationale)}</div>
     <div class="draftnote">${ICON.warn}${esc(f.draft||'DRAFT — REQUIRES REVIEW')}</div>`;

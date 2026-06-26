@@ -170,6 +170,41 @@ maturity_thresholds:
   operating_strong: 0.80     # operating >= this AND monitored -> L4 (else L3)
 
 # ===========================================================================
+# VETO (DISQUALIFYING) FINDINGS — our heuristic suggests.  statutory: false
+# ---------------------------------------------------------------------------
+# The maturity rung credits whether a control is DOCUMENTED. A veto fires when a
+# control's own cited evidence contains a clause whose CONTENT defeats the control
+# outcome (presence != conformance). Pure deterministic code (atlas/engine/veto.py)
+# evaluates these over the cited facts — no model is involved. Each rule names the
+# NIS2 reference it DEFEATS and a short rationale, surfaced on the Finding so a reader
+# sees WHY the control was capped. A live veto caps the achieved rung at L1 and the
+# status reads "vetoed" (never "meets"). Adding a rule is a YAML edit, not a code change.
+#
+# These remain a TUNABLE heuristic. NIS2 Art 21(1) is outcomes-based; a rung — or a
+# veto — is never a safe harbour. Matcher fields per rule:
+#   control_id        which control the veto can disqualify
+#   defeats_ref       the NIS2 article the clause defeats (used in the surfaced reason)
+#   context_all       regexes that must ALL appear in one cited clause to scope the rule
+#   max_window_hours  optional: the clause also fires only if it states a window > this
+#                     many hours (durations are parsed from the quote in pure code)
+#   rationale         the human-readable "why this disqualifies" shown on the Finding
+# ===========================================================================
+vetoes:
+  - id: "VETO-RM21D-01-SUPPLIER-NOTIF-WINDOW"
+    control_id: RM-21D-01
+    defeats_ref: "Art 23(4)(a)"     # the 24h early-warning cascade the clause breaks
+    max_window_hours: 72            # Art 23 outer bound — notification within 72h
+    context_all:                    # ALL must appear in the SAME cited clause
+      - 'suppl|third[\s-]?part|vendor|service provider|sub-?process|processor'
+      - 'notif|inform|report|breach|incident|disclos'
+    rationale: >-
+      A supplier incident-notification window longer than the entity's own Art 23
+      cascade (early warning <=24h, notification <=72h) leaves the entity structurally
+      unable to meet its statutory reporting duty: the clause defeats supply-chain
+      security rather than evidencing it. Documenting such a window is a disqualifying
+      defect, not a control. Tighten the contractual window to feed the 24h/72h cascade.
+
+# ===========================================================================
 # CRITERIA REGISTRY — 16 rows (Art 20, Art 21(2)(a)-(j), Art 23(4)(a)-(d)).
 # Migrated verbatim from the verified artifact. iso_clauses are REFERENCE-ONLY.
 # ===========================================================================
