@@ -33,6 +33,26 @@ class ExtractionError(RuntimeError):
     pass
 
 
+def _run_extraction(runner: "Runner", system: str, user: str, tool: dict) -> list[dict]:
+    """Invoke the runner, converting ANY unexpected backend failure into a clean
+    ExtractionError (which the API maps to 503) so a model/API error — a bad or expired
+    key, no credits, a disabled model, a rate limit, a network blip — surfaces as a
+    readable message instead of a bare 500 Internal Server Error. Intended fail-closed
+    errors (no key set, anthropic package missing) are already ExtractionError and pass
+    through unchanged.
+    """
+    try:
+        return runner(system, user, tool)
+    except ExtractionError:
+        raise
+    except Exception as exc:  # noqa: BLE001 — auth/rate-limit/overloaded/network/bad-model
+        raise ExtractionError(
+            f"extraction model call failed ({type(exc).__name__}): {exc}. Check that "
+            f"ANTHROPIC_API_KEY is valid, the account has credits, and the model "
+            f"{EXTRACTION_MODEL!r} is enabled for it."
+        ) from exc
+
+
 FACT_TOOL: dict[str, Any] = {
     "name": "record_evidence_facts",
     "description": (
@@ -186,7 +206,7 @@ def extract_evidence_facts(control_id: str, chunks: list[Chunk], *, runner: Runn
 
     runner = runner or _anthropic_runner
     system, user = build_evidence_item_prompt(control_id, chunks)
-    raw = runner(system, user, evidence_item_tool(control))
+    raw = _run_extraction(runner, system, user, evidence_item_tool(control))
 
     built: list[ExtractedFact] = []
     for item in raw:
@@ -276,7 +296,7 @@ def extract_facts(control_id: str, chunks: list[Chunk], *, runner: Runner | None
     """
     runner = runner or _anthropic_runner
     system, user = build_prompt(control_id, chunks)
-    raw = runner(system, user, FACT_TOOL)
+    raw = _run_extraction(runner, system, user, FACT_TOOL)
 
     built: list[ExtractedFact] = []
     for item in raw:
