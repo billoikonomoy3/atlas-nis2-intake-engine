@@ -172,8 +172,17 @@ def jurisdiction(sector: str = "", is_ecomms: bool = False, in_scope: bool = Tru
 async def _ingest_uploads(files: list[UploadFile]) -> list:
     chunks = []
     for f in files:
+        name = f.filename or "upload"
         data = await f.read()
-        chunks.extend(ingest_bytes(data, f.filename or "upload"))
+        try:
+            chunks.extend(ingest_bytes(data, name))
+        except ValueError as exc:
+            # Unsupported file type (e.g. .json) -> clean JSON 422, never a 500 whose
+            # plain-text "Internal Server Error" body makes the frontend's r.json() throw.
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except Exception as exc:  # noqa: BLE001 — unreadable/corrupt doc, still fail cleanly
+            raise HTTPException(
+                status_code=422, detail=f"could not read {name!r}: {exc}") from exc
     return chunks
 
 

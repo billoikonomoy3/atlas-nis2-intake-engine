@@ -164,3 +164,23 @@ def test_assess_area_fails_closed_without_api_key(monkeypatch):
                                      b"Suppliers are classified into three criticality tiers.",
                                      "text/plain")})
     assert r.status_code == 503   # extraction needs a key; never fabricates a map
+
+
+def test_unsupported_upload_type_is_clean_422_not_500():
+    # Regression: a .json (or any non pdf/docx/txt/md) upload used to raise an uncaught
+    # ValueError -> 500 with a PLAIN-TEXT "Internal Server Error" body, which made the
+    # frontend's r.json() throw "Unexpected token 'I'". It must now be a clean JSON 422.
+    import json as _json
+    entity = _json.dumps(VALID_ENTITY)
+    cases = [
+        ("/assess/control", {"control_id": "RM-21D-01", "entity": entity}),
+        ("/extract", {"control_id": "RM-21D-01"}),
+    ]
+    for endpoint, data in cases:
+        r = client.post(endpoint, data=data,
+                        files={"files": ("data.json", b'{"x":1}', "application/json")})
+        assert r.status_code == 422, endpoint
+        assert ".json" in r.json()["detail"]   # body is valid JSON (the whole point)
+
+    r = client.post("/assess/area", files={"files": ("x.rtf", b"{\\rtf1}", "application/rtf")})
+    assert r.status_code == 422 and ".rtf" in r.json()["detail"]

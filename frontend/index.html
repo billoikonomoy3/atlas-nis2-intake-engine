@@ -782,7 +782,7 @@ async function assess(){
   try{
     const r=await fetch('/assess/control',{method:'POST',body:fd});
     if(r.status===503){$('amsg').innerHTML=`<div class="msg warn">${ICON.warn}<div><b>Extraction needs a model API key.</b> The deterministic core runs offline; set <code>ANTHROPIC_API_KEY</code> on the server to enable cited extraction.</div></div>`;return;}
-    if(!r.ok){$('amsg').innerHTML=`<div class="msg err">${ICON.err}<span>Error ${r.status}: ${esc((await r.json()).detail||'')}</span></div>`;return;}
+    if(!r.ok){const raw=await r.text();let detail=raw;try{detail=JSON.parse(raw).detail||raw;}catch(_){}$('amsg').innerHTML=`<div class="msg err">${ICON.err}<span>Error ${r.status}: ${esc(detail)}</span></div>`;return;}
     const d=await r.json();
     const n=d.facts.length;
     $('amsg').innerHTML=`<div class="msg ok">${ICON.ok}<span><b>${n} cited fact${n===1?'':'s'}</b> extracted &amp; provenance-verified; maturity assigned deterministically.</span></div>`;
