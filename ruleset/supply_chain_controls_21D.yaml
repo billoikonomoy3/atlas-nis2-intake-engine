@@ -1,0 +1,251 @@
+# =============================================================================
+# Atlas source-of-truth registry — Supply chain security
+# NIS2 Article 21(2)(d)
+# =============================================================================
+#
+# PURPOSE
+#   Replaces vague single-line requirements with concrete, auditor-recognised
+#   EVIDENCE ITEMS per control. The extraction model's job becomes "find
+#   evidence of THIS specific artifact" instead of "find quotes about this
+#   vague topic". Presence-detection stays the model's only job; the coverage
+#   verdict is the deterministic count of which evidence items are present /
+#   absent / ambiguous. Firewall unchanged.
+#
+# PROVENANCE (verify control statements against primaries before you rely on them)
+#   - Legal basis : Directive (EU) 2022/2555 (NIS2), Article 21(2)(d)
+#   - Binding spec: Commission Implementing Regulation (EU) 2024/2690, Annex Section 5
+#                   https://eur-lex.europa.eu/eli/reg_impl/2024/2690/oj/eng
+#   - Evidence    : ENISA Technical Implementation Guidance v1.0 (June 2025), Section 5
+#                   https://www.enisa.europa.eu/publications/nis2-technical-implementation-guidance
+#   - Control map : ISO/IEC 27001:2022 Annex A, controls A.5.19–A.5.23
+#
+#   The requirement_statement and evidence_item text below are Atlas checklist
+#   phrasings derived from the above. They are NOT verbatim regulation text and
+#   do not need to be — the verbatim-substring firewall runs on the SUPPLIER'S
+#   document, not on this registry. Tighten wording against ENISA §5 when you
+#   have an hour; do not block shipping on it.
+#
+# SCOPE DISCIPLINE
+#   This file is Art 21(2)(d) ONLY. Do not encode the other 12 CIR sections
+#   before the demo ships. One control area, working, beats thirteen, half-done.
+# =============================================================================
+
+control_area:
+  id: "21D"
+  article: "NIS2 Art 21(2)(d)"
+  cir_section: "CIR (EU) 2024/2690 Annex §5 — Supply chain security"
+  title: "Supply chain security"
+  intent: >
+    Security-related aspects of the relationship between the entity and its
+    direct suppliers and service providers are governed, contractually bound,
+    risk-assessed, monitored, and offboarded in a controlled way.
+
+controls:
+
+  - id: "RM-21D-01"
+    title: "Supplier register / inventory"
+    iso_mapping: ["A.5.19"]
+    requirement_statement: >
+      The entity maintains a register of suppliers and service providers,
+      identifying which ones have access to, or impact on, network and
+      information systems, and classifying them by criticality.
+    evidence_items:
+      - id: "21D-01-a"
+        item: "A documented supplier/service-provider register exists"
+        good_looks_like: "A list or system of record naming suppliers, not a prose claim that one exists"
+      - id: "21D-01-b"
+        item: "Suppliers are classified by criticality or risk tier"
+        good_looks_like: "Tiering criteria stated (e.g. access to systems, data sensitivity, dependency)"
+      - id: "21D-01-c"
+        item: "The register identifies which suppliers touch in-scope systems/data"
+        good_looks_like: "A mapping from supplier to the system/service/data they affect"
+    signals:
+      present: "Names a register/inventory AND a classification or tiering method"
+      ambiguous: "Mentions 'we know our suppliers' or 'suppliers are assessed' with no register artifact"
+      absent: "No reference to any supplier inventory or classification"
+
+  - id: "RM-21D-02"
+    title: "Supplier security risk assessment"
+    iso_mapping: ["A.5.19", "A.5.21"]
+    requirement_statement: >
+      Security risks arising from each supplier relationship are assessed before
+      onboarding and re-assessed periodically or on significant change, taking
+      into account the supplier's own security posture and the criticality of
+      the service.
+    evidence_items:
+      - id: "21D-02-a"
+        item: "A supplier risk-assessment process is defined"
+        good_looks_like: "Named method/criteria, not just 'risks are considered'"
+      - id: "21D-02-b"
+        item: "Assessment occurs before onboarding a supplier"
+        good_looks_like: "Pre-contract or pre-onboarding gate stated"
+      - id: "21D-02-c"
+        item: "Re-assessment is triggered periodically or on change"
+        good_looks_like: "A cadence (e.g. annual) or a defined trigger condition"
+      - id: "21D-02-d"
+        item: "Supplier's own security posture is an input (certifications, attestations)"
+        good_looks_like: "Reference to supplier ISO 27001 / SOC 2 / questionnaire / audit results"
+    signals:
+      present: "Defined process WITH timing (pre-onboarding and/or periodic re-assessment)"
+      ambiguous: "States risks are assessed but no process, criteria, or timing"
+      absent: "No supplier-specific risk assessment referenced"
+
+  - id: "RM-21D-03"
+    title: "Security requirements in supplier agreements"
+    iso_mapping: ["A.5.20"]
+    requirement_statement: >
+      Information-security requirements are agreed and documented in contracts
+      with suppliers, proportionate to the criticality of the service, including
+      obligations on incident notification, audit/assurance rights, and
+      sub-contracting.
+    evidence_items:
+      - id: "21D-03-a"
+        item: "Contracts include explicit information-security clauses"
+        good_looks_like: "Reference to security obligations being contractually binding"
+      - id: "21D-03-b"
+        item: "Supplier incident-notification obligation is contractual"
+        good_looks_like: "Supplier must notify the entity of incidents within a stated timeframe"
+      - id: "21D-03-c"
+        item: "Right-to-audit or assurance-evidence clause exists"
+        good_looks_like: "Entity can audit, or supplier must provide audit reports/certifications"
+      - id: "21D-03-d"
+        item: "Sub-contracting / onward-supplier obligations are addressed"
+        good_looks_like: "Flow-down of security requirements to the supplier's suppliers"
+    signals:
+      present: "Security clauses AND at least one of {incident notification, audit right} are contractual"
+      ambiguous: "Mentions contracts/agreements but no security-specific obligations named"
+      absent: "No contractual security requirements referenced"
+
+  - id: "RM-21D-04"
+    title: "ICT supply chain / product & sub-supplier security"
+    iso_mapping: ["A.5.21"]
+    requirement_statement: >
+      Security risks in the ICT product and service supply chain (including
+      components, dependencies, and onward suppliers) are managed, including
+      consideration of supplier provenance and the security of acquired
+      products and services.
+    evidence_items:
+      - id: "21D-04-a"
+        item: "ICT product/service acquisition includes security criteria"
+        good_looks_like: "Security is a stated factor in procurement/selection decisions"
+      - id: "21D-04-b"
+        item: "Supplier provenance / trustworthiness is considered"
+        good_looks_like: "Reference to country-of-origin, ownership, or trust considerations"
+      - id: "21D-04-c"
+        item: "Onward (sub-supplier) supply-chain risk is in scope"
+        good_looks_like: "Risk extends beyond direct supplier to their dependencies"
+    signals:
+      present: "Acquisition security criteria AND sub-supplier/dependency risk both addressed"
+      ambiguous: "Generic 'we use trusted vendors' with no criteria or dependency consideration"
+      absent: "No ICT supply-chain or sub-supplier security referenced"
+
+  - id: "RM-21D-05"
+    title: "Monitoring & review of supplier security performance"
+    iso_mapping: ["A.5.22"]
+    requirement_statement: >
+      Supplier service delivery and security performance are monitored,
+      reviewed, and subject to change management over the life of the
+      relationship, including handling of changes to supplier services.
+    evidence_items:
+      - id: "21D-05-a"
+        item: "Ongoing monitoring of supplier security performance occurs"
+        good_looks_like: "A review activity over time, not only at onboarding"
+      - id: "21D-05-b"
+        item: "Reviews have a defined cadence or trigger"
+        good_looks_like: "Periodic review stated (e.g. annual supplier review)"
+      - id: "21D-05-c"
+        item: "Changes to supplier services are managed"
+        good_looks_like: "Change-management process covers supplier service changes"
+    signals:
+      present: "Ongoing monitoring WITH a cadence/trigger AND change handling"
+      ambiguous: "States suppliers are 'managed' or 'reviewed' with no cadence or change process"
+      absent: "No ongoing monitoring or review of suppliers referenced"
+
+  - id: "RM-21D-06"
+    title: "Supplier incident handling, termination & exit"
+    iso_mapping: ["A.5.20", "A.5.22"]
+    requirement_statement: >
+      Procedures exist for handling security incidents involving suppliers and
+      for the controlled termination/offboarding of a supplier relationship,
+      including return or deletion of data and revocation of access.
+    evidence_items:
+      - id: "21D-06-a"
+        item: "Supplier-related incident handling is defined"
+        good_looks_like: "How the entity responds when a supplier is the source/vector of an incident"
+      - id: "21D-06-b"
+        item: "Controlled supplier offboarding / exit procedure exists"
+        good_looks_like: "Defined steps when a supplier relationship ends"
+      - id: "21D-06-c"
+        item: "Access revocation on termination is addressed"
+        good_looks_like: "Supplier access is removed when the relationship ends"
+      - id: "21D-06-d"
+        item: "Data return or secure deletion on exit is addressed"
+        good_looks_like: "Entity data is returned/deleted when a supplier exits"
+    signals:
+      present: "Exit procedure WITH at least one of {access revocation, data return/deletion}"
+      ambiguous: "Mentions ending supplier relationships with no security steps"
+      absent: "No supplier incident handling or exit procedure referenced"
+
+# =============================================================================
+# How the deterministic layer should read this (no model in this path):
+#   per control: count evidence_items with status PRESENT / ABSENT / AMBIGUOUS
+#   coverage(control) = present / total_evidence_items
+#   verdict(control)  = derive from `signals` thresholds, NOT from raw count alone
+#                       e.g. a control with all items 'present' but the load-bearing
+#                       item (per signals.present) absent => still "partial"
+#   This is where you encode that not all evidence items are equal — the signals
+#   block lets deterministic code weight the decisive item without the model
+#   making any judgment.
+# =============================================================================
+
+# =============================================================================
+# COVERAGE ENGINE — operational data for the deterministic coverage layer.
+# Added by the RM-21D coverage wiring. HEURISTIC + TUNABLE (statutory: false):
+# it tells pure code (atlas/engine/coverage.py) how to turn evidence-item
+# presence into a per-control coverage verdict. The MODEL never reads this block;
+# it runs only in the offline deterministic path. The `controls:` block above is
+# unchanged.
+# =============================================================================
+coverage_engine:
+
+  # Per-item present / ambiguous / absent bucketing (computed in pure code):
+  #   absent    : no provenance-verified fact tags the item
+  #   present   : >=1 verified fact tags it with extraction confidence >= present_confidence
+  #   ambiguous : verified fact(s) tag it but ALL below present_confidence
+  #               (the topic is located, but not solidly evidenced)
+  # `confidence` is the model's LOCATING confidence, never a verdict; the bucket
+  # itself is decided here, deterministically. Tune the threshold freely.
+  present_confidence: 0.60
+
+  # The single load-bearing evidence item per control (decisive-item rule,
+  # threshold = 1). Read off each control's `signals.present`: a control is at
+  # best 'ambiguous' (partial) unless its decisive item is present — count alone
+  # is never enough. This is the "weight the decisive item" the footer above asks
+  # for, made machine-readable so deterministic code needs no prose parsing.
+  decisive_items:
+    RM-21D-01: "21D-01-a"   # the register / inventory artifact itself
+    RM-21D-02: "21D-02-a"   # a defined supplier risk-assessment process
+    RM-21D-03: "21D-03-a"   # contractual information-security clauses
+    RM-21D-04: "21D-04-a"   # security criteria in ICT acquisition
+    RM-21D-05: "21D-05-a"   # ongoing monitoring of supplier security
+    RM-21D-06: "21D-06-b"   # a controlled offboarding / exit procedure
+
+  # Disqualifying ("veto") findings for the 21D area — DATA, evaluated by pure
+  # code in atlas/engine/veto.py. `control_area: "21D"` scopes a veto to EVERY
+  # control in this area at once; that leaf/area scope is exactly what the old
+  # per-control `control_id` filter dropped silently (now fixed). A live veto caps
+  # the control's coverage and reads "vetoed".
+  vetoes:
+    - id: "VETO-RM21D-AREA-ACCESS-BEFORE-ASSESSMENT"
+      control_area: "21D"
+      defeats_ref: "Art 21(2)(d)"
+      context_all:                    # ALL must appear in one cited clause
+        - 'suppl|third[\s-]?part|vendor|service provider'
+        - 'production access|granted access|system access|onboard'
+        - 'before|prior to|without|ahead of|pending'
+        - 'assessment|due diligence|risk review|security review'
+      rationale: >-
+        Granting a supplier access before its security assessment is complete
+        defeats supply-chain risk control: access precedes the very assessment
+        meant to gate it, so the assessment can no longer prevent the risk.
+        Documenting this sequence is a disqualifying defect, not a control.

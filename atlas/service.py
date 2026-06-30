@@ -10,7 +10,9 @@ from __future__ import annotations
 
 from .engine.baseline import build_bar
 from .engine.classify import classify_entity
-from .engine.models import Bar, ClassifyResult, EntityInput, ExtractedFact, Finding, Snapshot
+from .engine.coverage import compute_area_coverage
+from .engine.models import (AreaCoverage, Bar, ClassifyResult, EntityInput, ExtractedFact,
+                            Finding, Snapshot)
 from .engine.proportionality import score_from_verdict
 from .engine.scoring import score_control
 from .engine.snapshot import build_snapshot
@@ -34,6 +36,11 @@ def assess_control_from_facts(entity: EntityInput, control_id: str,
     if cr.status != "ok" or cr.bar is None:
         return cr, None
     return cr, score_control(control_id, facts, cr.bar)
+
+
+def run_area_coverage(facts: list[ExtractedFact]) -> AreaCoverage:
+    """Deterministic Art 21(2)(d) coverage map from provenance-verified, item-tagged facts."""
+    return compute_area_coverage(facts)
 
 
 def run_snapshot(entity: EntityInput, generated_at: str, *, control_id: str | None = None,

@@ -19,12 +19,28 @@ import yaml
 # (atlas/engine/ruleset.py -> atlas/ -> <root>).
 _RULESET_PATH = Path(__file__).resolve().parents[2] / "ruleset" / "nis2_v1.yaml"
 
+# The Art 21(2)(d) supply-chain evidence-item registry is a SEPARATE data source,
+# loaded alongside the main ruleset. Keeping it separate leaves nis2_v1.yaml's bytes
+# (and therefore ruleset_sha256, embedded in every snapshot) untouched, so existing
+# determinism holds — this file is purely additive.
+_SUPPLY_CHAIN_PATH = _RULESET_PATH.parent / "supply_chain_controls_21D.yaml"
+
 
 @lru_cache(maxsize=1)
 def _load() -> tuple[dict[str, Any], str]:
     raw = _RULESET_PATH.read_bytes()
     sha = hashlib.sha256(raw).hexdigest()
     data = yaml.safe_load(raw.decode("utf-8"))
+    return data, sha
+
+
+@lru_cache(maxsize=1)
+def _load_supply_chain() -> tuple[dict[str, Any], str]:
+    if not _SUPPLY_CHAIN_PATH.exists():
+        return {}, ""
+    raw = _SUPPLY_CHAIN_PATH.read_bytes()
+    sha = hashlib.sha256(raw).hexdigest()
+    data = yaml.safe_load(raw.decode("utf-8")) or {}
     return data, sha
 
 
@@ -105,13 +121,69 @@ def criteria() -> list[dict[str, Any]]:
 
 
 def veto_rules() -> list[dict[str, Any]]:
-    """Disqualifying-finding rules (data-driven). Empty if the ruleset defines none."""
-    return ruleset().get("vetoes", [])
+    """Disqualifying-finding rules (data-driven), aggregated across both data sources.
+
+    The seed rules live in nis2_v1.yaml › vetoes; the Art 21(2)(d) area/leaf rules live
+    in supply_chain_controls_21D.yaml › coverage_engine.vetoes. Both are returned here so
+    veto.py evaluates them uniformly. Empty if neither file defines any.
+    """
+    return list(ruleset().get("vetoes", [])) + list(coverage_engine().get("vetoes", []))
 
 
 @lru_cache(maxsize=1)
 def criteria_by_id() -> dict[str, dict[str, Any]]:
     return {c["id"]: c for c in criteria()}
+
+
+# Supply-chain (Art 21(2)(d)) evidence-item registry — read-only accessors ------
+
+def supply_chain_registry() -> dict[str, Any]:
+    """The full parsed Art 21(2)(d) registry (cached). Empty dict if the file is absent."""
+    return _load_supply_chain()[0]
+
+
+def supply_chain_registry_sha256() -> str:
+    """sha256 of the registry bytes — provenance for the coverage map. '' if absent."""
+    return _load_supply_chain()[1]
+
+
+def supply_chain_area() -> dict[str, Any]:
+    return supply_chain_registry().get("control_area", {})
+
+
+def supply_chain_controls() -> list[dict[str, Any]]:
+    return supply_chain_registry().get("controls", [])
+
+
+@lru_cache(maxsize=1)
+def supply_chain_control_by_id() -> dict[str, dict[str, Any]]:
+    return {c["id"]: c for c in supply_chain_controls()}
+
+
+def coverage_engine() -> dict[str, Any]:
+    """The deterministic coverage layer's operational data (thresholds, decisive items,
+    area vetoes). Empty dict if the registry is absent."""
+    return supply_chain_registry().get("coverage_engine", {})
+
+
+def decisive_items() -> dict[str, str]:
+    return coverage_engine().get("decisive_items", {})
+
+
+def present_confidence() -> float:
+    """Heuristic, tunable threshold separating a 'present' item from an 'ambiguous' one."""
+    return float(coverage_engine().get("present_confidence", 0.6))
+
+
+def area_of(control_id: str) -> str | None:
+    """The control area a control belongs to ('21D' for RM-21D-*), else None.
+
+    Used by veto.py to fire area-scoped vetoes (``control_area``) for every control in
+    the area — the leaf/area scope the per-control filter used to drop silently.
+    """
+    if control_id in supply_chain_control_by_id():
+        return supply_chain_area().get("id")
+    return None
 
 
 def copyright_note() -> str:

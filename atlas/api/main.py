@@ -26,13 +26,14 @@ from pydantic import BaseModel
 from .. import ENGINE_VERSION
 from ..engine import ruleset as R
 from ..engine.baseline import build_bar
-from ..engine.models import (Bar, ClassifyResult, EntityInput, ExtractedFact, Finding,
-                             ProvenanceChunk, Snapshot, VersionInfo)
+from ..engine.models import (AreaCoverage, Bar, ClassifyResult, EntityInput, ExtractedFact,
+                             Finding, ProvenanceChunk, Snapshot, VersionInfo)
 from ..engine.scoring import score_control
-from ..extraction.extract import ExtractionError, extract_facts, validate_provenance
+from ..extraction.extract import (ExtractionError, extract_evidence_facts, extract_facts,
+                                  validate_provenance)
 from ..extraction.ingest import Chunk, ingest_bytes
 from ..jurisdiction import jurisdiction_pack
-from ..service import run_classify, run_snapshot
+from ..service import run_area_coverage, run_classify, run_snapshot
 
 app = FastAPI(
     title="Atlas — NIS2 readiness engine",
@@ -66,6 +67,11 @@ class SnapshotRequest(BaseModel):
     inputs: EntityInput
     control_id: Optional[str] = None
     facts: Optional[list[ExtractedFact]] = None
+    chunks: Optional[list[ProvenanceChunk]] = None
+
+
+class CoverageRequest(BaseModel):
+    facts: list[ExtractedFact]
     chunks: Optional[list[ProvenanceChunk]] = None
 
 
@@ -134,6 +140,16 @@ def score(req: ScoreRequest) -> Finding:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
+@app.post("/coverage", response_model=AreaCoverage)
+def coverage(req: CoverageRequest) -> AreaCoverage:
+    """Deterministic Art 21(2)(d) coverage map from evidence-item-tagged facts.
+
+    Public-ingress provenance gate applies: caller facts are re-verified against their
+    source chunks and unverifiable facts are dropped (same fail-closed rule as /score)."""
+    facts = _verify_facts_or_422(req.facts, req.chunks)
+    return run_area_coverage(facts)
+
+
 @app.post("/snapshot", response_model=Snapshot)
 def snapshot(req: SnapshotRequest) -> Snapshot:
     facts = req.facts
@@ -199,3 +215,20 @@ async def assess_control(control_id: str = Form(...), entity: str = Form(...),
         "facts": [f.model_dump() for f in facts],
         "finding": finding.model_dump(),
     }
+
+
+@app.post("/assess/area")
+async def assess_area(files: list[UploadFile] = File(...)):
+    """The RM-21D-* supply-chain slice: ingest -> evidence-item extraction (model, per
+    control) -> deterministic coverage map for the whole Art 21(2)(d) area."""
+    chunks = await _ingest_uploads(files)
+    if not chunks:
+        raise HTTPException(status_code=422, detail="no readable text in the uploaded document(s)")
+    facts: list[ExtractedFact] = []
+    try:
+        for control in R.supply_chain_controls():
+            facts.extend(extract_evidence_facts(control["id"], chunks))
+    except ExtractionError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    coverage_map = run_area_coverage(facts)
+    return {"coverage": coverage_map.model_dump(), "facts": [f.model_dump() for f in facts]}

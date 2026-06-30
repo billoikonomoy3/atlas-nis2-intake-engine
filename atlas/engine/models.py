@@ -23,6 +23,8 @@ Tier = Literal["Foundational", "Standard", "Enhanced", "Critical"]
 EvidenceKind = Literal["design", "operating"]
 # "vetoed": a disqualifying finding defeats the control regardless of the rung ratios.
 FindingStatus = Literal["meets", "gap", "insufficient_evidence", "vetoed"]
+# Coverage of one supply-chain evidence item (or a control area as a whole).
+CoverageStatus = Literal["present", "ambiguous", "absent"]
 
 
 # ---------------------------------------------------------------------------
@@ -161,6 +163,10 @@ class ExtractedFact(BaseModel):
     doc_id: str
     page: int
     confidence: float = Field(..., ge=0.0, le=1.0)
+    # Which registry evidence_item this fact addresses (e.g. "21D-03-b"). Optional and
+    # default None so the existing maturity slice is unchanged; set only by the
+    # evidence-item-aware extraction path and read only by the deterministic coverage layer.
+    evidence_item_id: Optional[str] = None
 
 
 class ProvenanceChunk(BaseModel):
@@ -220,6 +226,60 @@ class Finding(BaseModel):
     veto_capped: bool = Field(False, json_schema_extra=HEURISTIC)
     rationale: str = Field(..., json_schema_extra=HEURISTIC)
     draft: str = Field("DRAFT — REQUIRES REVIEW", json_schema_extra=HEURISTIC)
+
+
+# ---------------------------------------------------------------------------
+# Coverage map (the RM-21D-* evidence-item slice) — heuristic, deterministic.
+# A model LOCATES + QUOTES + TAGS evidence items; everything below is computed in
+# pure code (atlas/engine/coverage.py). No model assigns any status here.
+# ---------------------------------------------------------------------------
+
+class CoverageItem(BaseModel):
+    """One registry evidence_item and whether the document evidences it."""
+
+    evidence_item_id: str = Field(..., json_schema_extra=HEURISTIC)
+    item: str = Field(..., json_schema_extra=HEURISTIC)             # registry description
+    status: CoverageStatus = Field(..., json_schema_extra=HEURISTIC)
+    decisive: bool = Field(False, json_schema_extra=HEURISTIC)      # the load-bearing item?
+    max_confidence: float = Field(0.0, json_schema_extra=HEURISTIC) # best locating confidence
+    evidence: list[EvidenceRef] = Field(default_factory=list, json_schema_extra=HEURISTIC)
+
+
+class ControlCoverage(BaseModel):
+    """Per-control coverage: each evidence item's status + the resulting coverage state."""
+
+    control_id: str = Field(..., json_schema_extra=STATUTORY)
+    title: str = Field(..., json_schema_extra=HEURISTIC)
+    nis2_ref: str = Field(..., json_schema_extra=STATUTORY)
+    decisive_item: str = Field(..., json_schema_extra=HEURISTIC)
+    coverage_state: CoverageStatus = Field(..., json_schema_extra=HEURISTIC)
+    present_count: int = Field(..., json_schema_extra=HEURISTIC)
+    ambiguous_count: int = Field(..., json_schema_extra=HEURISTIC)
+    absent_count: int = Field(..., json_schema_extra=HEURISTIC)
+    total_items: int = Field(..., json_schema_extra=HEURISTIC)
+    coverage_ratio: float = Field(..., json_schema_extra=HEURISTIC)   # present / total
+    items: list[CoverageItem] = Field(default_factory=list, json_schema_extra=HEURISTIC)
+    vetoes: list[Veto] = Field(default_factory=list, json_schema_extra=HEURISTIC)
+    veto_capped: bool = Field(False, json_schema_extra=HEURISTIC)
+    rationale: str = Field(..., json_schema_extra=HEURISTIC)
+
+
+class AreaCoverage(BaseModel):
+    """The coverage map for a whole control area (Art 21(2)(d) supply chain)."""
+
+    area_id: str = Field(..., json_schema_extra=HEURISTIC)
+    article: str = Field(..., json_schema_extra=STATUTORY)
+    title: str = Field(..., json_schema_extra=HEURISTIC)
+    registry_sha256: str = Field(..., json_schema_extra=HEURISTIC)
+    controls: list[ControlCoverage] = Field(default_factory=list, json_schema_extra=HEURISTIC)
+    item_summary: dict[str, int] = Field(default_factory=dict, json_schema_extra=HEURISTIC)
+    control_summary: dict[str, int] = Field(default_factory=dict, json_schema_extra=HEURISTIC)
+    note: str = Field(
+        "Heuristic coverage map; the model only located + quoted + tagged evidence, every "
+        "status was computed deterministically. NIS2 Art 21(1) is outcomes-based — coverage "
+        "is not a safe harbour.",
+        json_schema_extra=HEURISTIC,
+    )
 
 
 # ---------------------------------------------------------------------------

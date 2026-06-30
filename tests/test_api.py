@@ -110,3 +110,57 @@ def test_extract_fails_closed_without_api_key(monkeypatch):
                     files={"files": ("doc.txt", b"All suppliers must sign a DPA.", "text/plain")})
     # No key -> 503 (fail closed), never a fabricated 200 with invented facts.
     assert r.status_code == 503
+
+
+# ---------------------------------------------------------------------------
+# Supply-chain coverage endpoints (the RM-21D-* slice).
+# ---------------------------------------------------------------------------
+
+def test_coverage_endpoint_buckets_a_verified_fact():
+    facts = [{
+        "control_id": "RM-21D-03", "evidence_kind": "design", "claim": "security schedule",
+        "source_quote": "must include the mandatory Security Schedule", "doc_id": "d.pdf",
+        "page": 1, "confidence": 0.9, "evidence_item_id": "21D-03-a",
+    }]
+    chunks = [{"doc_id": "d.pdf", "page": 1,
+               "text": "Every contract must include the mandatory Security Schedule and a DPA."}]
+    r = client.post("/coverage", json={"facts": facts, "chunks": chunks})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["area_id"] == "21D"
+    c03 = next(c for c in body["controls"] if c["control_id"] == "RM-21D-03")
+    a = next(i for i in c03["items"] if i["evidence_item_id"] == "21D-03-a")
+    assert a["status"] == "present" and a["decisive"] is True
+
+
+def test_coverage_refuses_facts_without_chunks():
+    # Same fail-closed provenance gate as /score: no chunks -> 422, never scored unverified.
+    facts = [{
+        "control_id": "RM-21D-03", "evidence_kind": "design", "claim": "x",
+        "source_quote": "must include the mandatory Security Schedule", "doc_id": "d.pdf",
+        "page": 1, "confidence": 0.9, "evidence_item_id": "21D-03-a",
+    }]
+    r = client.post("/coverage", json={"facts": facts})
+    assert r.status_code == 422
+
+
+def test_coverage_drops_fabricated_fact():
+    fab = [{
+        "control_id": "RM-21D-03", "evidence_kind": "design", "claim": "made up",
+        "source_quote": "WE AUDIT EVERY SUPPLIER IN REAL TIME", "doc_id": "ghost.pdf",
+        "page": 9, "confidence": 0.99, "evidence_item_id": "21D-03-c",
+    }]
+    chunks = [{"doc_id": "d.pdf", "page": 1, "text": "Unrelated note about the cafeteria."}]
+    r = client.post("/coverage", json={"facts": fab, "chunks": chunks})
+    assert r.status_code == 200
+    c03 = next(c for c in r.json()["controls"] if c["control_id"] == "RM-21D-03")
+    assert all(i["status"] == "absent" for i in c03["items"])   # the fabricated quote never counts
+
+
+def test_assess_area_fails_closed_without_api_key(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    r = client.post("/assess/area",
+                    files={"files": ("doc.txt",
+                                     b"Suppliers are classified into three criticality tiers.",
+                                     "text/plain")})
+    assert r.status_code == 503   # extraction needs a key; never fabricates a map

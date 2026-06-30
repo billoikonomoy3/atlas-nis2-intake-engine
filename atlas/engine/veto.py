@@ -55,6 +55,25 @@ def _all_match(patterns: list[str], text: str) -> bool:
     return all(re.search(p, text, re.IGNORECASE) for p in patterns)
 
 
+def _rule_applies(rule: dict, control_id: str) -> bool:
+    """Does this veto rule target ``control_id``?
+
+    A rule may scope itself three ways, any of which counts: ``control_id`` (one
+    control), ``control_ids`` (an explicit list), or ``control_area`` (every control in
+    an area, e.g. all RM-21D-* for "21D"). The old code matched only ``control_id ==``,
+    so an area/leaf rule that set ``control_area`` but no ``control_id`` resolved to None
+    and silently NEVER fired. Honouring all three scopes is the fix.
+    """
+    if rule.get("control_id") == control_id:
+        return True
+    if control_id in (rule.get("control_ids") or []):
+        return True
+    area = rule.get("control_area")
+    if area is not None and R.area_of(control_id) == area:
+        return True
+    return False
+
+
 def evaluate_vetoes(control_id: str, facts: list[ExtractedFact]) -> list[Veto]:
     """Return every active veto for ``control_id``, deterministically, from its facts.
 
@@ -63,7 +82,7 @@ def evaluate_vetoes(control_id: str, facts: list[ExtractedFact]) -> list[Veto]:
     ``max_window_hours``) the fact states a window exceeding that ceiling. Results are
     deduped and sorted so the output is byte-stable across runs.
     """
-    rules = [r for r in R.veto_rules() if r.get("control_id") == control_id]
+    rules = [r for r in R.veto_rules() if _rule_applies(r, control_id)]
     if not rules:
         return []
 
