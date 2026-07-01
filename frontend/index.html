@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Atlas — NIS2 Compliance Intelligence</title>
+<title>Atlas — NIS2 Supply-Chain Desk Review · RM-21D-01</title>
 <style>
   :root{
     /* surfaces & ink */
-    --bg:#eef1f6; --bg-grad:#e7ecf4; --surface:#ffffff; --surface-2:#f7f9fc; --surface-3:#f1f4f9;
+    --bg:#eef1f6; --surface:#ffffff; --surface-2:#f7f9fc; --surface-3:#f1f4f9;
     --border:#e3e8f0; --border-strong:#d2dae6; --line:#e3e8f0;
     --ink:#0f1c30; --ink-2:#41526a; --ink-3:#69788d; --ink-4:#9aa8ba;
     /* brand */
@@ -20,15 +20,14 @@
     --warn:#9a6700; --warn-soft:#fdf4dd; --warn-line:#eedcae;
     --bad:#b42318; --bad-soft:#fdecea; --bad-line:#f3c7c2;
     --info:#1c5bb8; --info-soft:#e9f1fc;
-    /* maturity ladder L0..L4 (red -> teal-green) — used by scope/proportionality badges */
+    /* maturity ladder L0..L4 (red -> teal-green) */
     --l0:#b42318; --l1:#c2590c; --l2:#9a7600; --l3:#117a48; --l4:#0e7490;
-    /* proportionality tiers (calm -> rigorous) */
+    /* proportionality tiers */
     --t0:#7c8aa0; --t1:#3567e0; --t2:#bf7d00; --t3:#b42318;
     /* effects */
     --r:14px; --r-sm:9px; --r-xs:6px;
     --sh-sm:0 1px 2px rgba(16,30,54,.06);
     --sh:0 6px 22px -10px rgba(16,30,54,.22), 0 1px 3px rgba(16,30,54,.06);
-    --sh-lg:0 18px 48px -22px rgba(16,30,54,.34);
     --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;
   }
   *{box-sizing:border-box}
@@ -38,7 +37,7 @@
       radial-gradient(1200px 560px at 92% -12%,#dbe6f6 0,transparent 58%),
       radial-gradient(900px 500px at 2% 0%,#e9eef7 0,transparent 50%),
       var(--bg);
-    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-feature-settings:"cv05","ss01";}
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
   .num{font-variant-numeric:tabular-nums}
   a{color:var(--accent)}
 
@@ -47,7 +46,7 @@
     background:linear-gradient(112deg,var(--brand) 0%,var(--brand-2) 64%,#214a7d 100%);
     color:#fff;border-bottom:1px solid rgba(255,255,255,.06);
     box-shadow:0 8px 30px -12px rgba(8,22,42,.55)}
-  .hbar{max-width:1320px;margin:0 auto;padding:13px 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .hbar{max-width:960px;margin:0 auto;padding:13px 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
   .lockup{display:flex;align-items:center;gap:12px;min-width:0}
   .mark{width:38px;height:38px;border-radius:10px;flex:0 0 auto;
     background:linear-gradient(150deg,#3f7ad6,#2a55c2 60%,#1c3f86);
@@ -66,28 +65,28 @@
   .chip.live{background:rgba(43,194,128,.15);color:#9bf0c4;border:1px solid rgba(43,194,128,.4)}
   .chip.live .dot{width:7px;height:7px;border-radius:50%;background:#46e39a;box-shadow:0 0 0 3px rgba(70,227,154,.22)}
 
-  /* ============ process strip ============ */
+  /* ============ transient pipeline strip ============ */
   .strip{background:rgba(255,255,255,.045);border-top:1px solid rgba(255,255,255,.07)}
-  .strip-in{max-width:1320px;margin:0 auto;padding:9px 26px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  .strip-in{max-width:960px;margin:0 auto;padding:9px 26px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;
     color:#aac3df;font-size:11.5px;font-weight:600}
-  .step{display:inline-flex;align-items:center;gap:7px;padding:2px 4px;white-space:nowrap}
-  .step .n{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;
+  .pstep{display:inline-flex;align-items:center;gap:7px;padding:2px 4px;white-space:nowrap;opacity:.75;transition:opacity .2s}
+  .pstep.model{color:#ffd98a}
+  .pstep.active{opacity:1}
+  .pstep .n{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;
     background:rgba(255,255,255,.12);color:#dbe9f8}
-  .step.law .n{background:rgba(127,196,255,.2);color:#bfe0ff}
-  .step.heur .n{background:rgba(255,206,99,.18);color:#ffd98a}
+  .pstep.model .n{background:rgba(255,206,99,.18);color:#ffd98a}
+  .pstep.done .n{background:rgba(70,227,154,.24);color:#9bf0c4}
   .sep{color:rgba(255,255,255,.28);font-size:13px}
+  .strip-in .tagr{flex:1;text-align:right;font-size:10.5px;color:#8fb0d0}
 
   /* ============ layout ============ */
-  .wrap{max-width:1320px;margin:0 auto;padding:22px 26px 40px;display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:22px;align-items:start}
-  @media(max-width:1020px){.wrap{grid-template-columns:1fr}}
-  .col{display:flex;flex-direction:column;gap:18px;min-width:0}
+  .wrap{max-width:960px;margin:0 auto;padding:22px 26px 40px;display:flex;flex-direction:column;gap:18px}
 
   /* ============ card ============ */
   .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-sm);overflow:hidden}
   .card-h{display:flex;align-items:flex-start;gap:12px;padding:16px 18px 12px}
   .card-h .ix{width:26px;height:26px;border-radius:8px;flex:0 0 auto;display:grid;place-items:center;font-size:12px;font-weight:800;
     background:var(--surface-3);color:var(--ink-2);border:1px solid var(--border)}
-  .card-h .ix.heur{background:var(--heur-soft);color:var(--heur);border-color:var(--heur-line)}
   .card-h .tt{flex:1;min-width:0}
   .card-h h2{margin:0;font-size:17px;font-weight:700;letter-spacing:-.1px;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .card-h .sub{color:var(--ink-3);font-size:12px;margin-top:3px;line-height:1.5}
@@ -104,41 +103,52 @@
   /* ============ form ============ */
   label{display:block;font-weight:650;font-size:11.5px;color:var(--ink-2);margin:13px 0 5px;letter-spacing:.1px}
   label .hint{font-weight:500;color:var(--ink-4)}
-  input,select{width:100%;padding:9px 11px;border:1px solid var(--border-strong);border-radius:var(--r-sm);font:inherit;background:#fff;color:var(--ink);transition:border-color .12s,box-shadow .12s}
-  input:hover,select:hover{border-color:#b9c5d6}
-  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-  input::placeholder{color:var(--ink-4)}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
-  @media(max-width:560px){.grid3{grid-template-columns:1fr}}
-  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-  .chk{display:inline-flex;gap:7px;align-items:center;padding:7px 11px;border:1px solid var(--border-strong);border-radius:999px;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink-2);transition:all .12s;user-select:none}
+  textarea,select{width:100%;padding:9px 11px;border:1px solid var(--border-strong);border-radius:var(--r-sm);font:inherit;background:#fff;color:var(--ink);transition:border-color .12s,box-shadow .12s}
+  textarea{min-height:104px;resize:vertical;line-height:1.5}
+  textarea:hover,select:hover{border-color:#b9c5d6}
+  textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+  .row > div{flex:1;min-width:190px}
+
+  .seg{display:inline-flex;border:1px solid var(--border-strong);border-radius:var(--r-sm);overflow:hidden;background:var(--surface-2)}
+  .seg button{all:unset;cursor:pointer;padding:9px 16px;font-size:12.5px;font-weight:750;color:var(--ink-2);text-align:center;transition:background .12s,color .12s}
+  .seg button + button{border-left:1px solid var(--border-strong)}
+  .seg button.on{background:var(--accent);color:#fff}
+  .seg button:hover:not(.on){background:var(--surface-3)}
+
+  .chk{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border:1px solid var(--border-strong);border-radius:999px;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink-2);transition:all .12s;user-select:none}
   .chk:hover{border-color:#b9c5d6;background:var(--surface-2)}
   .chk:has(input:checked){background:var(--accent-soft);border-color:#9cb8f4;color:var(--accent-2)}
   .chk input{width:auto;accent-color:var(--accent)}
 
   .btn{all:unset;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;
-    background:var(--accent);color:#fff;padding:10px 16px;border-radius:var(--r-sm);font-weight:700;font-size:12.5px;
+    background:var(--accent);color:#fff;padding:11px 18px;border-radius:var(--r-sm);font-weight:700;font-size:13px;
     box-shadow:0 1px 2px rgba(20,46,92,.28);transition:filter .12s,transform .04s}
   .btn:hover{filter:brightness(1.06)} .btn:active{transform:translateY(1px)}
   .btn svg{width:15px;height:15px}
   .btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--border-strong);box-shadow:none}
   .btn.ghost:hover{background:var(--surface-3)}
   .btn.gold{background:linear-gradient(180deg,#b98a1e,#9a6f12);color:#fff}
-  .btn.wide{width:100%}
-  .footerbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .footerbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
 
   /* dropzone */
-  .drop{border:1.5px dashed var(--border-strong);border-radius:var(--r-sm);padding:22px 16px;text-align:center;color:var(--ink-3);font-size:12.5px;background:var(--surface-2);cursor:pointer;transition:all .14s}
+  .drop{border:1.5px dashed var(--border-strong);border-radius:var(--r-sm);padding:20px 16px;text-align:center;color:var(--ink-3);font-size:12.5px;background:var(--surface-2);cursor:pointer;transition:all .14s}
   .drop:hover{border-color:#aebfd6;background:var(--surface-3)}
   .drop.over{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-2)}
-  .drop .di{width:30px;height:30px;margin:0 auto 8px;color:var(--ink-4)}
+  .drop .di{width:28px;height:28px;margin:0 auto 7px;color:var(--ink-4)}
   .drop b{color:var(--accent-2)}
   .filelist{display:flex;flex-direction:column;gap:6px;margin-top:10px}
   .fileitem{display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-xs);font-size:12px}
   .fileitem svg{width:15px;height:15px;color:var(--ink-3);flex:0 0 auto}
   .fileitem .fn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--ink-2)}
   .fileitem .fs{color:var(--ink-4);font-size:11px}
+
+  /* target-bar preview */
+  .barbox{margin-top:14px;display:flex;align-items:center;gap:13px;padding:12px 14px;border-radius:var(--r-sm);
+    background:var(--heur-soft);border:1px solid var(--heur-line)}
+  .barbox .bl{flex:0 0 auto;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--heur)}
+  .barbox .bt{flex:1;min-width:0;font-size:12.5px;color:#7a5200;line-height:1.5}
+  .barbox .bt b{color:#5f4200}
 
   /* messages */
   .msg{display:flex;align-items:flex-start;gap:9px;font-size:12px;padding:9px 12px;border-radius:var(--r-sm);margin-top:12px;line-height:1.5}
@@ -147,130 +157,37 @@
   .msg.warn{background:var(--warn-soft);color:#7a5200;border:1px solid var(--warn-line)}
   .msg.ok{background:var(--ok-soft);color:#0c5d36;border:1px solid var(--ok-line)}
   .msg.info{background:var(--info-soft);color:#174a93;border:1px solid #c9ddf6}
-  .msg ul{margin:5px 0 0;padding-left:18px}
 
   .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(53,103,224,.25);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;flex:0 0 auto}
   @keyframes sp{to{transform:rotate(360deg)}}
 
-  /* ============ determination (statutory) ============ */
-  .verdict-hero{display:flex;align-items:center;gap:14px;padding:14px 15px;border-radius:var(--r-sm);border:1px solid var(--law-line);
-    background:linear-gradient(180deg,#f6f9fd,#eef3fa)}
-  .scope-badge{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;width:74px;height:60px;border-radius:10px;color:#fff;text-align:center;box-shadow:var(--sh-sm)}
-  .scope-badge .lbl{font-size:9px;font-weight:800;letter-spacing:.8px;opacity:.85}
-  .scope-badge .val{font-size:15px;font-weight:850;line-height:1.05;margin-top:2px}
-  .scope-in{background:linear-gradient(150deg,#1a3a63,#0e2541)}
-  .scope-out{background:linear-gradient(150deg,#7c8aa0,#5d6b80)}
-  .verdict-hero .vmeta{flex:1;min-width:0}
-  .verdict-hero .vrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .samplenote{display:flex;align-items:flex-start;gap:8px;margin-top:12px;font-size:11.5px;color:#174a93;background:var(--info-soft);border:1px solid #c9ddf6;border-radius:var(--r-xs);padding:9px 12px;line-height:1.5}
+  .samplenote svg{width:15px;height:15px;flex:0 0 auto;margin-top:1px}
+  .samplenote b{color:#123f80}
 
-  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:800;color:#fff;letter-spacing:.2px}
-  .cls-essential{background:linear-gradient(110deg,#8e1d14,#b42318)}
-  .cls-important{background:linear-gradient(110deg,#1c5bb8,#3567e0)}
-  .cls-out_of_scope{background:#5d6b80}
-  .cls-deferred_designation{background:linear-gradient(110deg,#5e3a93,#7d4fbf)}
+  /* ============ report ============ */
+  .report-h{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:16px 18px 6px}
+  .report-h .obj{flex:1;min-width:0}
+  .report-h h2{margin:0;font-size:18px;font-weight:800;letter-spacing:-.2px;color:var(--ink)}
+  .report-h .objtxt{font-size:12.5px;color:var(--ink-2);margin-top:5px;line-height:1.55}
+  .maps{display:flex;gap:7px;flex-wrap:wrap;margin:11px 0 2px}
+  .mapchip{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;padding:4px 9px;border-radius:6px;font-family:var(--mono);letter-spacing:.2px}
+  .mapchip.iso{background:var(--law-soft);color:var(--law);border:1px solid var(--law-line)}
+  .mapchip.csf{background:#eef7f1;color:#0c5d36;border:1px solid var(--ok-line)}
+  .mapchip .mk{font-family:-apple-system,"Segoe UI",sans-serif;font-size:9px;font-weight:800;opacity:.7;text-transform:uppercase;letter-spacing:.5px}
 
-  .kvgrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;margin-top:12px}
-  .kv{background:#fff;padding:10px 12px;min-width:0}
-  .kv .k{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-4)}
-  .kv .v{font-size:13.5px;font-weight:750;color:var(--ink);margin-top:3px}
-  .kv .v.sm{font-size:12px;font-weight:650}
-  .kv.full{grid-column:1/-1}
+  .sect{padding:8px 18px 4px}
+  .sect-t{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-3);margin:16px 0 9px;display:flex;align-items:center;gap:8px}
+  .sect-t .num-badge{font-family:var(--mono);font-size:10px;color:var(--ink-4);font-weight:700}
+  .hr{height:1px;background:var(--border);margin:2px 18px}
 
-  .reasonbox{margin-top:12px;padding:11px 13px;background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--law);border-radius:var(--r-xs);font-size:12.5px;color:var(--ink-2);line-height:1.55}
-  .audit-wrap{margin-top:10px}
-  .audit-wrap summary{cursor:pointer;font-size:11.5px;font-weight:700;color:var(--ink-3);list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
-  .audit-wrap summary::-webkit-details-marker{display:none}
-  .audit-wrap summary .caret{transition:transform .15s;font-size:10px}
-  .audit-wrap[open] summary .caret{transform:rotate(90deg)}
-  .audit{font-size:11.5px;color:var(--ink-2);border-left:2px solid var(--law-line);padding:4px 0 4px 11px;margin:6px 0 0;line-height:1.5}
-  .flagbox{display:flex;align-items:flex-start;gap:9px;margin-top:10px;background:var(--warn-soft);border:1px solid var(--warn-line);border-radius:var(--r-xs);padding:9px 12px;font-size:11.5px;color:#7a5200;line-height:1.55}
-  .flagbox svg{width:15px;height:15px;flex:0 0 auto;margin-top:1px;color:var(--warn)}
-
-  /* ============ proportionality (heuristic) ============ */
-  .define{font-size:12.5px;color:var(--ink-2);line-height:1.55;background:var(--heur-soft);border:1px solid var(--heur-line);border-radius:var(--r-sm);padding:11px 13px;margin-bottom:14px}
-  .define b{color:#7a5200}
-
-  .score-hero{display:flex;align-items:stretch;gap:16px;flex-wrap:wrap}
-  .score-dial{flex:0 0 auto;min-width:132px;text-align:center;padding:14px 12px;border-radius:var(--r-sm);background:linear-gradient(180deg,#fff,var(--surface-2));border:1px solid var(--border)}
-  .score-dial .dial-ring{width:104px;height:104px;border-radius:50%;margin:0 auto;display:grid;place-items:center;
-    background:conic-gradient(var(--ac) calc(var(--pct)*1%),var(--surface-3) 0);transition:background .45s ease}
-  .score-dial .dial-inner{width:80px;height:80px;border-radius:50%;background:#fff;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;box-shadow:inset 0 1px 2px rgba(16,30,54,.10)}
-  .score-dial .dial-inner .big{font-size:31px;font-weight:850;line-height:1;letter-spacing:-1px;color:var(--ac,var(--ink))}
-  .score-dial .dial-inner .den{font-size:11px;font-weight:700;color:var(--ink-4);line-height:1.2}
-  .score-dial .tiername{margin-top:11px;font-size:12px;font-weight:800;letter-spacing:.3px;padding:3px 11px;border-radius:999px;color:#fff;display:inline-block;white-space:nowrap}
-  .score-dial .raw{margin-top:7px;font-size:10.5px;color:var(--ink-4);font-weight:600}
-  .score-expl{flex:1;min-width:180px;display:flex;flex-direction:column;justify-content:center}
-  .score-expl .et{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-4);margin-bottom:4px}
-  .score-expl .ex{font-size:12.5px;color:var(--ink-2);line-height:1.55}
-
-  /* meter */
-  .meter{margin:16px 0 4px}
-  .meter-track{position:relative;height:13px;display:flex;border-radius:999px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(16,30,54,.14)}
-  .meter-track .seg{height:100%}
-  .meter-scale{position:relative;height:16px;margin-top:5px}
-  .meter-scale span{position:absolute;transform:translateX(-50%);font-size:9.5px;color:var(--ink-4);font-weight:700}
-  .meter-labels{display:flex;margin-top:2px}
-  .meter-labels span{text-align:center;font-size:9.5px;font-weight:800;letter-spacing:.3px;text-transform:uppercase}
-  .meter-axis{display:flex;justify-content:space-between;margin-top:8px;font-size:9.5px;color:var(--ink-4);font-weight:600}
-  .meter-axis span:first-child::before{content:"\2190  "}
-  .meter-axis span:last-child::after{content:"  \2192"}
-  .pin{position:absolute;top:-5px;width:0;height:0;z-index:3}
-  .pin .needle{position:absolute;left:-2px;top:-3px;width:4px;height:22px;border-radius:3px;background:var(--ink);box-shadow:0 0 0 2px #fff,0 2px 5px rgba(0,0,0,.3)}
-  .pin .bub{position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:5px;white-space:nowrap;box-shadow:var(--sh-sm)}
-  .pin .bub:after{content:"";position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--ink);border-bottom:0}
-  .pin-raw{position:absolute;top:-1px;width:0;height:0;z-index:2}
-  .pin-raw .nd{position:absolute;left:-1px;top:0;width:2px;height:13px;background:rgba(15,28,48,.4)}
-
-  /* drivers */
-  .drv-head{display:flex;align-items:baseline;justify-content:space-between;margin:18px 0 8px}
-  .drv-head .t{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-3)}
-  .drv-head .h{font-size:11px;color:var(--ink-4)}
-  .drv-legend{display:flex;gap:16px;margin:0 0 10px;font-size:11px;color:var(--ink-4)}
-  .drv-legend span{display:inline-flex;align-items:center;gap:6px}
-  .drv-legend i{width:18px;height:8px;border-radius:999px;flex:0 0 auto}
-  .drv-legend i.lg-fill{background:var(--ink-3)}
-  .drv-legend i.lg-ghost{background:repeating-linear-gradient(90deg,rgba(15,28,48,.05) 0 4px,transparent 4px 8px);border:1px solid var(--border-strong)}
-  .drv{display:flex;align-items:center;gap:11px;padding:7px 0;border-bottom:1px solid var(--surface-3)}
-  .drv:last-child{border-bottom:0}
-  .drv .dt{width:6px;height:24px;border-radius:3px;flex:0 0 auto}
-  .drv .dm{flex:1;min-width:0}
-  .drv .dn{font-size:12.5px;font-weight:700;color:var(--ink)}
-  .drv .dh{font-size:11px;color:var(--ink-4);margin-top:1px;line-height:1.4}
-  .drv .dbarwrap{position:relative;flex:0 0 116px;height:8px;background:var(--surface-3);border-radius:999px;overflow:hidden}
-  .drv .dghost{position:absolute;left:0;top:0;height:100%;border-radius:999px;background:repeating-linear-gradient(90deg,rgba(15,28,48,.05) 0 4px,transparent 4px 8px)}
-  .drv .dfill{position:absolute;left:0;top:0;height:100%;border-radius:999px}
-  .drv .dp{flex:0 0 auto;width:56px;text-align:right;font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap}
-  .drv .dp .dpmax{font-size:10.5px;font-weight:600;color:var(--ink-4)}
-  .drv.zero{opacity:.55}
-  .drv.zero .dp{color:var(--ink-4)}
-  .drv.total{border-top:1px solid var(--border);border-bottom:0;margin-top:5px;padding-top:10px}
-  .drv.total .dn{font-weight:800;color:var(--ink)}
-  .drv.total .dp{color:var(--ink)}
-
-  .floors{margin-top:13px;display:flex;flex-direction:column;gap:7px}
-  .floor{display:flex;align-items:flex-start;gap:9px;background:var(--info-soft);border:1px solid #cbddf6;border-radius:var(--r-xs);padding:8px 11px;font-size:11.5px;color:#174a93;line-height:1.5}
-  .floor svg{width:15px;height:15px;flex:0 0 auto;margin-top:1px;color:var(--info)}
-
-  .consequence{margin-top:15px;display:flex;align-items:center;gap:13px;padding:13px 14px;border-radius:var(--r-sm);
-    background:linear-gradient(180deg,#fff,var(--surface-2));border:1px solid var(--border);border-left:3px solid var(--heur)}
-  .consequence .arrow{flex:0 0 auto;color:var(--heur)}
-  .consequence .ctxt{flex:1;min-width:0}
-  .consequence .ct{font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-4)}
-  .consequence .cv{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.5}
-
-  .lvbadge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:6px;color:#fff}
-  .lv0{background:var(--l0)}.lv1{background:var(--l1)}.lv2{background:var(--l2)}.lv3{background:var(--l3)}.lv4{background:var(--l4)}
-
-  .disclaim{font-size:11px;color:var(--ink-4);margin-top:13px;line-height:1.5;padding-top:11px;border-top:1px dashed var(--border)}
-
-  /* ============ finding / extraction ============ */
-  .status-banner{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:var(--r-sm);margin-bottom:14px}
-  .status-banner .si{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto}
-  .status-banner .si svg{width:19px;height:19px}
-  .status-banner .st{flex:1;min-width:0}
-  .status-banner .stt{font-size:15px;font-weight:800;letter-spacing:-.1px}
-  .status-banner .sts{font-size:11.5px;margin-top:2px;line-height:1.45}
+  /* verdict band */
+  .verdict-band{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;margin:2px 0 4px}
+  .vb-status{flex:1;min-width:230px;display:flex;align-items:center;gap:12px;padding:14px 15px;border-radius:var(--r-sm)}
+  .vb-status .si{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto}
+  .vb-status .si svg{width:20px;height:20px}
+  .vb-status .stt{font-size:16px;font-weight:850;letter-spacing:-.2px}
+  .vb-status .sts{font-size:11.5px;margin-top:2px;line-height:1.4}
   .sb-meets{background:var(--ok-soft);border:1px solid var(--ok-line)}
   .sb-meets .si{background:var(--ok);color:#fff}.sb-meets .stt{color:#0c5d36}.sb-meets .sts{color:#28704c}
   .sb-gap{background:var(--warn-soft);border:1px solid var(--warn-line)}
@@ -279,44 +196,36 @@
   .sb-insufficient_evidence .si{background:var(--bad);color:#fff}.sb-insufficient_evidence .stt{color:#8e1d14}.sb-insufficient_evidence .sts{color:#9a3127}
   .sb-vetoed{background:var(--bad-soft);border:1px solid var(--bad-line)}
   .sb-vetoed .si{background:var(--bad);color:#fff}.sb-vetoed .stt{color:#8e1d14}.sb-vetoed .sts{color:#9a3127}
+  .vb-metrics{display:flex;gap:10px;flex-wrap:wrap}
+  .vbm{min-width:96px;padding:11px 13px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--border);display:flex;flex-direction:column;gap:3px;justify-content:center}
+  .vbm .k{font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-4)}
+  .vbm .v{font-size:14px;font-weight:800;color:var(--ink)}
+  .lvbadge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:6px;color:#fff}
+  .lv0{background:var(--l0)}.lv1{background:var(--l1)}.lv2{background:var(--l2)}.lv3{background:var(--l3)}.lv4{background:var(--l4)}
+  .rr{display:inline-block;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:6px}
+  .rr-low{background:var(--ok-soft);color:#0c5d36;border:1px solid var(--ok-line)}
+  .rr-elev{background:var(--warn-soft);color:#7a5200;border:1px solid var(--warn-line)}
+  .rr-high{background:var(--bad-soft);color:#8e1d14;border:1px solid var(--bad-line)}
+  .rr-und{background:var(--surface-3);color:var(--ink-3);border:1px solid var(--border-strong)}
 
-  /* disqualifying (veto) findings */
-  .veto-head{display:flex;align-items:center;justify-content:space-between;margin:20px 0 9px}
-  .veto-head h3{margin:0;font-size:12.5px;font-weight:800;letter-spacing:.2px;color:var(--bad);display:flex;align-items:center;gap:8px}
-  .veto-head h3 svg{width:15px;height:15px}
-  .veto-head .cnt{font-size:11px;font-weight:700;color:var(--bad)}
-  .vetobox{border:1px solid var(--bad-line);border-left:3px solid var(--bad);border-radius:var(--r-sm);padding:12px 13px;margin:9px 0;background:var(--bad-soft);overflow:hidden}
-  .vetobox .vtop{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px}
-  .vetobox .vtag{font-size:9.5px;font-weight:850;letter-spacing:.6px;padding:3px 8px;border-radius:5px;text-transform:uppercase;background:var(--bad);color:#fff}
-  .vetobox .vref{font-family:var(--mono);font-size:10.5px;font-weight:700;color:#8e1d14}
-  .vetobox .vrat{font-size:12.5px;color:#7a241c;line-height:1.55;overflow-wrap:anywhere}
-  .vetobox .vdet{font-family:var(--mono);font-size:11px;color:#9a3127;margin-top:6px;overflow-wrap:anywhere}
-  .vetobox .quote{font-style:italic;color:#7a241c;font-size:12px;line-height:1.55;border-left:2px solid var(--bad-line);padding:2px 0 2px 11px;margin:9px 0 8px;overflow-wrap:anywhere}
-  .vetobox .cite{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:#9a3127;font-weight:600;overflow-wrap:anywhere}
-
-  /* maturity ladder — colored by RELATIONSHIP (attained / achieved-verdict / owed / required), not level identity */
+  /* maturity ladder */
   .ladder{margin:6px 0 4px}
   .ladder-rungs{display:flex;gap:5px}
   .rung{flex:1;text-align:center;position:relative}
   .rung .bar{height:34px;border-radius:7px;background:var(--surface-3);border:1px solid var(--border);display:grid;place-items:center;
     font-size:12px;font-weight:850;color:var(--ink-4);transition:all .2s}
   .rung .nm{font-size:9px;font-weight:700;color:var(--ink-4);margin-top:5px;letter-spacing:.2px;line-height:1.2}
-  /* attained rungs (reached) — neutral brand, no good/bad meaning */
   .rung.filled .bar{color:#fff;border-color:transparent;background:var(--brand-2)}
-  /* owed rungs (above achieved, up to & incl. required) */
   .rung.gaprung .bar{background:var(--warn-soft);border:1px dashed var(--warn-line);color:var(--warn)}
   .rung.gaprung .nm{color:var(--warn)}
-  /* achieved rung carries the verdict color (white text, colored fill + ring) */
   .rung.ach .bar{color:#fff;transform:translateY(-2px)}
   .rung.ach.v-ok .bar{background:var(--ok);box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ok)}
   .rung.ach.v-gap .bar{background:var(--warn);box-shadow:0 0 0 3px #fff,0 0 0 5px var(--warn)}
   .rung.ach.v-bad .bar{background:var(--bad);box-shadow:0 0 0 3px #fff,0 0 0 5px var(--bad)}
   .rung.ach .nm{color:var(--ink-2);font-weight:800}
-  /* required rung outline cue */
   .rung.req .bar{outline:2px solid var(--heur);outline-offset:2px}
   .rung .reqflag{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:800;color:var(--heur);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:1px}
   .rung .reqflag .tri{width:0;height:0;border:5px solid transparent;border-top-color:var(--heur);border-bottom:0}
-  /* MET marker when achieved == required (replaces REQ; clears the ring) */
   .rung .reqflag.metflag{color:var(--ok);top:-20px}
   .rung .reqflag.metflag .tri{border-top-color:var(--ok)}
   .rung.met.ach .bar{transform:none}
@@ -327,8 +236,8 @@
   .gp-0{background:var(--ok-soft);color:#0c5d36;border:1px solid var(--ok-line)}
   .gp-n{background:var(--warn-soft);color:#7a5200;border:1px solid var(--warn-line)}
 
-  /* coverage bars */
-  .cov{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:16px}
+  /* design vs operating completeness */
+  .cov{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:6px}
   .covcell{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 13px}
   .covcell .cl{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.2px}
   .covcell .cl b{font-size:14px;font-weight:850;color:var(--ink)}
@@ -339,10 +248,7 @@
   .covcell .cn{font-size:10.5px;color:var(--ink-4);margin-top:6px}
 
   /* evidence */
-  .ev-head{display:flex;align-items:center;justify-content:space-between;margin:20px 0 9px}
-  .ev-head h3{margin:0;font-size:12.5px;font-weight:800;letter-spacing:.2px;color:var(--ink);display:flex;align-items:center;gap:8px}
-  .ev-head h3 svg{width:15px;height:15px}
-  .ev-head .cnt{font-size:11px;font-weight:700;color:var(--ink-4)}
+  .ev-group{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-3);margin:14px 0 8px}
   .ev{border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 13px;margin:9px 0;background:#fff;position:relative;overflow:hidden}
   .ev:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
   .ev.design:before{background:var(--accent)} .ev.operating:before{background:var(--ok)}
@@ -353,32 +259,83 @@
   .ev .claim{flex:1;min-width:120px;font-size:12.5px;font-weight:650;color:var(--ink);overflow-wrap:anywhere}
   .conf{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:var(--ink-3);font-variant-numeric:tabular-nums}
   .conf .cbar{width:42px;height:5px;background:var(--surface-3);border-radius:999px;overflow:hidden}
-  .conf .cbf{height:100%;border-radius:999px;background:var(--ink-4)}
-  .ev .quote{font-style:italic;color:var(--ink-2);font-size:12px;line-height:1.55;border-left:2px solid var(--border-strong);padding:2px 0 2px 11px;margin:9px 0 8px;overflow-wrap:anywhere;max-height:6.5em;overflow-y:auto;overscroll-behavior:contain}
-  .ev .quote::-webkit-scrollbar{width:6px}
-  .ev .quote::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:999px}
+  .conf .cbf{height:100%;border-radius:999px}
+  .ev .quote{font-style:italic;color:var(--ink-2);font-size:12px;line-height:1.55;border-left:2px solid var(--border-strong);padding:2px 0 2px 11px;margin:9px 0 8px;overflow-wrap:anywhere}
   .ev .cite{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink-4);font-weight:600;overflow-wrap:anywhere}
   .ev .cite svg{width:12px;height:12px}
+  .ev-empty{background:var(--warn-soft);border:1px solid var(--warn-line);border-radius:var(--r-sm);padding:12px 14px;font-size:12px;color:#7a5200;line-height:1.55}
+  .ev-empty b{color:#5f4200}
 
-  .rationale{margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.6;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-xs);padding:10px 12px;white-space:pre-wrap;word-break:break-word}
-  .draftnote{display:flex;align-items:center;gap:8px;margin-top:11px;font-size:11px;font-weight:700;color:var(--heur);background:var(--heur-soft);border:1px solid var(--heur-line);border-radius:var(--r-xs);padding:8px 11px}
-  .draftnote svg{width:14px;height:14px;flex:0 0 auto}
+  /* disqualifying (veto) findings */
+  .veto-head{display:flex;align-items:center;justify-content:space-between;margin:6px 0 9px}
+  .veto-head h3{margin:0;font-size:12.5px;font-weight:800;letter-spacing:.2px;color:var(--bad);display:flex;align-items:center;gap:8px}
+  .veto-head h3 svg{width:15px;height:15px}
+  .vetobox{border:1px solid var(--bad-line);border-left:3px solid var(--bad);border-radius:var(--r-sm);padding:12px 13px;margin:9px 0;background:var(--bad-soft);overflow:hidden}
+  .vetobox .vtop{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px}
+  .vetobox .vtag{font-size:9.5px;font-weight:850;letter-spacing:.6px;padding:3px 8px;border-radius:5px;text-transform:uppercase;background:var(--bad);color:#fff}
+  .vetobox .vref{font-family:var(--mono);font-size:10.5px;font-weight:700;color:#8e1d14}
+  .vetobox .vrat{font-size:12.5px;color:#7a241c;line-height:1.55;overflow-wrap:anywhere}
+  .vetobox .quote{font-style:italic;color:#7a241c;font-size:12px;line-height:1.55;border-left:2px solid var(--bad-line);padding:2px 0 2px 11px;margin:9px 0 8px;overflow-wrap:anywhere}
+  .vetobox .cite{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:#9a3127;font-weight:600}
 
-  /* empty state */
+  /* PBC checklist */
+  .pbc{border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;margin-top:4px}
+  .pbc-row{display:flex;align-items:center;gap:11px;padding:10px 13px;border-bottom:1px solid var(--surface-3);font-size:12.5px}
+  .pbc-row:last-child{border-bottom:0}
+  .pbc-mark{width:22px;height:22px;border-radius:6px;flex:0 0 auto;display:grid;place-items:center;font-weight:900;font-size:13px}
+  .pm-yes{background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok-line)}
+  .pm-no{background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad-line)}
+  .pm-na{background:var(--surface-3);color:var(--ink-4);border:1px solid var(--border-strong)}
+  .pbc-row .pt{flex:1;min-width:0;color:var(--ink);font-weight:600}
+  .pbc-row .ph{font-size:11px;color:var(--ink-4);font-weight:600;white-space:nowrap}
+  .pbc-foot{font-size:10.5px;color:var(--ink-4);margin-top:7px;line-height:1.5}
+
+  /* narrative + recommendation */
+  .prose{font-size:13px;color:var(--ink-2);line-height:1.6;background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--brand-2);border-radius:var(--r-xs);padding:12px 14px}
+  .prose.rec{border-left-color:var(--accent)}
+
+  /* management response */
+  .mgmt{display:flex;gap:14px;flex-wrap:wrap}
+  .mgmt > div{flex:1;min-width:190px}
+  .mgmt input{width:100%;padding:9px 11px;border:1px solid var(--border-strong);border-radius:var(--r-sm);font:inherit;background:#fff;color:var(--ink)}
+  .mgmt input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+  /* rationale + draft */
+  .rationale{margin-top:4px;font-family:var(--mono);font-size:11px;color:var(--ink-3);line-height:1.6;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-xs);padding:10px 12px;white-space:pre-wrap;word-break:break-word}
+  .draftnote{display:flex;align-items:flex-start;gap:8px;margin:14px 0 4px;font-size:11.5px;font-weight:600;color:var(--heur);background:var(--heur-soft);border:1px solid var(--heur-line);border-radius:var(--r-xs);padding:10px 12px;line-height:1.5}
+  .draftnote svg{width:15px;height:15px;flex:0 0 auto;margin-top:1px}
+  .draftnote b{font-weight:850}
+
+  /* engine-down honest state */
+  .downstate{text-align:center;padding:30px 18px}
+  .downstate .di2{width:44px;height:44px;margin:0 auto 12px;color:var(--ink-4)}
+  .downstate .dt2{font-size:15px;font-weight:800;color:var(--ink-2)}
+  .downstate .ds2{font-size:12.5px;color:var(--ink-3);margin-top:6px;line-height:1.6;max-width:520px;margin-left:auto;margin-right:auto}
+  .downstate code{font-family:var(--mono);background:var(--surface-3);padding:1px 5px;border-radius:4px;font-size:11px}
+
+  /* empty */
   .empty{text-align:center;padding:26px 16px;color:var(--ink-4)}
   .empty .ei{width:42px;height:42px;margin:0 auto 12px;color:var(--border-strong)}
-  .empty .ei svg{width:100%;height:100%}
   .empty .et{font-size:13px;font-weight:700;color:var(--ink-3)}
   .empty .es{font-size:12px;margin-top:5px;line-height:1.5}
 
   /* footer */
-  footer{max-width:1320px;margin:8px auto 0;padding:18px 26px 30px;color:var(--ink-4);font-size:11px;line-height:1.6;
+  footer{max-width:960px;margin:8px auto 0;padding:18px 26px 30px;color:var(--ink-4);font-size:11px;line-height:1.6;
     display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--border)}
-  footer .foot-brand{display:flex;align-items:flex-start;gap:10px;flex:1;min-width:240px}
-  footer .foot-mark{flex:0 0 auto;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:var(--ink-3);background:var(--surface-3);border:1px solid var(--border);margin-top:1px}
   footer .fl b{color:var(--ink-3)}
-  footer .foot-meta{text-align:right;max-width:360px}
   footer code{font-family:var(--mono);background:var(--surface-3);padding:1px 5px;border-radius:4px;font-size:10.5px;color:var(--ink-2)}
+
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* print / export */
+  @media print{
+    body{background:#fff}
+    header.app,.strip,#inputcard,footer,.noprint{display:none!important}
+    .wrap{max-width:none;padding:0}
+    .card{box-shadow:none;border:1px solid #ccc}
+    .report-h .actions{display:none}
+    .ev .quote,.prose,.rationale{page-break-inside:avoid}
+  }
 </style>
 </head>
 <body>
@@ -397,7 +354,7 @@
         <span class="sub">Compliance Intelligence</span>
       </div>
     </div>
-    <div class="htag">NIS2 Stage-3 intake → compliance baseline. <b>The judgment path runs no model</b> — a model is used only to locate &amp; quote evidence inside documents.</div>
+    <div class="htag">Supply-chain security desk review — <b>RM-21D-01 · Art 21(2)(d)</b>. The model only <b>locates &amp; quotes</b> evidence; every maturity level, gap and verdict is assigned by deterministic code.</div>
     <div class="hmeta">
       <span class="chip live"><span class="dot"></span>Deterministic core</span>
       <span class="chip draft"><span class="dot"></span>DRAFT · REQUIRES REVIEW</span>
@@ -405,362 +362,197 @@
     </div>
   </div>
   <div class="strip">
-    <div class="strip-in">
-      <span class="step law"><span class="n">1</span>Entity facts</span><span class="sep">→</span>
-      <span class="step law"><span class="n">2</span>Determination</span><span class="sep">→</span>
-      <span class="step heur"><span class="n">3</span>Proportionality</span><span class="sep">→</span>
-      <span class="step"><span class="n">4</span>Evidence</span><span class="sep">→</span>
-      <span class="step heur"><span class="n">5</span>Finding</span><span class="sep">→</span>
-      <span class="step"><span class="n">6</span>Snapshot</span>
-      <span style="flex:1"></span>
-      <span class="origin law" style="background:transparent;border-color:rgba(127,196,255,.35);color:#bfe0ff"><span class="gl" style="background:#7fc4ff"></span>The law determines</span>
-      <span class="origin heur" style="background:transparent;border-color:rgba(255,206,99,.35);color:#ffd98a"><span class="gl" style="background:#ffce63"></span>Our heuristic suggests</span>
+    <div class="strip-in" id="pipeline">
+      <span class="pstep" data-step="0"><span class="n">1</span>Ingest</span><span class="sep">→</span>
+      <span class="pstep model" data-step="1"><span class="n">2</span>Extract · quote only</span><span class="sep">→</span>
+      <span class="pstep" data-step="2"><span class="n">3</span>Verify provenance</span><span class="sep">→</span>
+      <span class="pstep" data-step="3"><span class="n">4</span>Score · deterministic</span>
+      <span class="tagr">a model runs at step 2 only — never at step 4</span>
     </div>
   </div>
 </header>
 
 <div class="wrap">
-  <!-- ===================== LEFT: intake ===================== -->
-  <div class="col">
-    <div class="card">
-      <div class="card-h">
-        <div class="ix">1</div>
-        <div class="tt">
-          <h2>Entity facts <span class="origin law"><span class="gl"></span>Statutory inputs</span></h2>
-          <div class="sub">User-provided facts only. Malformed financials return <code>INSUFFICIENT_INPUT</code> — never a confident verdict.</div>
-        </div>
-      </div>
-      <div class="card-b">
-        <label>Sector (NIS2 Annex)</label>
-        <select id="annex">
-          <option value="I">Annex I — high-criticality (Energy, Health, Digital infra…)</option>
-          <option value="II">Annex II — other critical (Manufacturing, Food, Research…)</option>
-          <option value="none">Not a covered sector</option>
-        </select>
-        <label>Sector name <span class="hint">(optional)</span></label>
-        <input id="sector_name" placeholder="e.g. Energy">
-        <div class="grid3">
-          <div><label>Staff <span class="hint">(FTE)</span></label><input id="staff" type="number" value="300" class="num"></div>
-          <div><label>Turnover <span class="hint">€/yr</span></label><input id="turnover" type="number" value="80000000" class="num"></div>
-          <div><label>Balance sheet <span class="hint">€</span></label><input id="balance" type="number" value="60000000" class="num"></div>
-        </div>
-        <label>Article 3 / 2(2) special flags</label>
-        <div class="chips" id="flags">
-          <label class="chk"><input type="checkbox" value="qtsp">QTSP</label>
-          <label class="chk"><input type="checkbox" value="dns">DNS</label>
-          <label class="chk"><input type="checkbox" value="tld">TLD registry</label>
-          <label class="chk"><input type="checkbox" value="ecomms">Public e-comms</label>
-          <label class="chk"><input type="checkbox" value="public_admin_central">Public admin (central)</label>
-        </div>
-        <div class="grid3">
-          <div><label>Art 2(2) designation</label><select id="art22"><option value="">none</option><option value="active">active</option><option value="pending">pending</option></select></div>
-          <div><label>Prior size band</label><select id="prior"><option value="">none</option><option>below_medium</option><option>medium</option><option>large</option></select></div>
-          <div><label>Years breached</label><input id="years" type="number" value="2" class="num"></div>
-        </div>
-        <div class="footerbtns">
-          <button class="btn" onclick="classify()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-            Run determination
-          </button>
-          <button class="btn ghost" onclick="trap()">Load false-positive trap</button>
-        </div>
-        <div id="cmsg"></div>
+
+  <!-- ===================== INPUT ===================== -->
+  <div class="card" id="inputcard">
+    <div class="card-h">
+      <div class="ix">1</div>
+      <div class="tt">
+        <h2>Evidence &amp; target <span class="ref">RM-21D-01 · Art 21(2)(d)</span></h2>
+        <div class="sub">Provide the supplier-security policy (and, optionally, operating evidence). A model quotes what it finds; a deterministic scorer assigns the maturity level. Nothing is invented.</div>
       </div>
     </div>
+    <div class="card-b">
+      <div id="drop" class="drop">
+        <svg class="di" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L8 8m4-4l4 4"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+        <div>Drop a policy document here, or <b>click to browse</b></div>
+        <div style="font-size:11px;color:var(--ink-4);margin-top:4px">PDF · DOCX · TXT · MD</div>
+      </div>
+      <input id="file" type="file" accept=".pdf,.docx,.txt,.md" multiple style="display:none">
+      <div id="files" class="filelist"></div>
 
-    <div class="card">
-      <div class="card-h">
-        <div class="ix">4</div>
-        <div class="tt">
-          <h2>Supply-chain evidence <span class="ref">RM-21D-01 · Art 21(2)(d)</span></h2>
-          <div class="sub">Upload a policy / register (PDF · DOCX · TXT). A model <b>locates and quotes</b> evidence; a deterministic scorer assigns the level. Cited, never invented.</div>
-        </div>
-      </div>
-      <div class="card-b">
-        <div id="drop" class="drop">
-          <svg class="di" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L8 8m4-4l4 4"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-          <div>Drop a document here, or <b>click to browse</b></div>
-          <div style="font-size:11px;color:var(--ink-4);margin-top:4px">PDF · DOCX · TXT · MD</div>
-        </div>
-        <input id="file" type="file" accept=".pdf,.docx,.txt,.md" multiple style="display:none">
-        <div id="files" class="filelist"></div>
-        <div class="footerbtns">
-          <button class="btn gold wide" onclick="assess()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9 5 9-5M3 12l9 5 9-5M3 17l9 5 9-5"/></svg>
-            Extract &amp; score RM-21D-01
-          </button>
-        </div>
-        <div id="amsg"></div>
-      </div>
-    </div>
+      <label>…or paste policy text <span class="hint">(design evidence — the control as written)</span></label>
+      <textarea id="policy" placeholder="Paste the supplier-security / third-party risk policy text here."></textarea>
 
-    <div class="card">
-      <div class="card-h">
-        <div class="ix">6</div>
-        <div class="tt">
-          <h2>Reproducible snapshot</h2>
-          <div class="sub">Re-derivable JSON embedding engine + ruleset version + sha256. Same inputs → identical <code>content_sha256</code>.</div>
+      <div id="opwrap" style="display:none">
+        <label>Operating evidence <span class="hint">(proof the control actually ran over the window)</span></label>
+        <textarea id="operating" placeholder="Paste operating evidence — supplier register, executed contracts, monitoring records."></textarea>
+      </div>
+
+      <div class="footerbtns">
+        <button class="btn ghost" onclick="loadSample()">Load sample policy</button>
+        <label class="chk"><input type="checkbox" id="opevi" onchange="toggleOperating()">also provide operating evidence</label>
+      </div>
+
+      <label style="margin-top:18px">Target maturity — the bar this control must clear</label>
+      <div class="row">
+        <div style="flex:0 0 auto;min-width:0">
+          <div class="seg" id="levelseg" role="tablist" aria-label="Target maturity level">
+            <button data-lv="2" onclick="pickLevel(2)">L2 · Documented</button>
+            <button data-lv="3" class="on" onclick="pickLevel(3)">L3 · Operating</button>
+            <button data-lv="4" onclick="pickLevel(4)">L4 · Measured</button>
+          </div>
         </div>
       </div>
-      <div class="card-b">
-        <button class="btn ghost wide" onclick="snapshot()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-          Export snapshot JSON
+      <div class="barbox" id="barbox">
+        <span class="bl">Bar</span>
+        <div class="bt" id="bartext">Deriving the required rung…</div>
+      </div>
+
+      <div class="footerbtns">
+        <button class="btn gold" onclick="runReview()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9 5 9-5M3 12l9 5 9-5M3 17l9 5 9-5"/></svg>
+          Run desk review
         </button>
-        <div id="smsg"></div>
       </div>
+      <div id="amsg"></div>
     </div>
   </div>
 
-  <!-- ===================== RIGHT: results ===================== -->
-  <div class="col">
-    <div class="card">
-      <div class="card-h">
-        <div class="ix">2</div>
-        <div class="tt">
-          <h2>Determination <span class="origin law"><span class="gl"></span>The law determines</span></h2>
-          <div class="sub">Scope, class &amp; size band under Directive (EU) 2022/2555 and Reg. 2003/361/EC — pure, reproducible code.</div>
-        </div>
+  <!-- ===================== REPORT (the hero) ===================== -->
+  <div class="card" id="reportcard">
+    <div class="card-b" id="report" style="padding-top:14px">
+      <div class="empty">
+        <div class="ei"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+        <div class="et">No desk review yet</div>
+        <div class="es">Load the sample policy (or upload your own), pick the target maturity, and run the review.</div>
       </div>
-      <div class="card-b" id="result"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-h">
-        <div class="ix heur">3</div>
-        <div class="tt">
-          <h2>Proportionality &amp; required bar <span class="origin heur"><span class="gl"></span>Our heuristic suggests</span></h2>
-          <div class="sub">A transparent, tunable calibration — <b>no statutory force</b>. NIS2 Art 21(1) is outcomes-based.</div>
-        </div>
-      </div>
-      <div class="card-b" id="prop"></div>
-    </div>
-
-    <div class="card" id="findingcard" style="display:none">
-      <div class="card-h">
-        <div class="ix heur">5</div>
-        <div class="tt">
-          <h2>Cited finding — RM-21D-01 <span class="origin heur"><span class="gl"></span>Deterministic score</span></h2>
-          <div class="sub">Maturity assigned by rule from cited evidence; the model only located &amp; quoted it.</div>
-        </div>
-      </div>
-      <div class="card-b" id="finding"></div>
     </div>
   </div>
 </div>
 
 <footer>
-  <div class="foot-brand">
-    <span class="foot-mark" aria-hidden="true">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-        <circle cx="12" cy="12" r="9"/>
-        <path d="M3 12h18M12 3c2.8 2.4 4.2 5.6 4.2 9s-1.4 6.6-4.2 9c-2.8-2.4-4.2-5.6-4.2-9S9.2 5.4 12 3z" fill="none" opacity=".85"/>
-      </svg>
-    </span>
-    <div class="fl"><b>Atlas Compliance Intelligence</b> — deterministic NIS2 readiness engine · The law determines scope; the heuristic informs, never replaces, Art 21(1) judgment.</div>
-  </div>
-  <div class="fl foot-meta">Every artefact is <b>DRAFT — REQUIRES REVIEW</b> · ISO/IEC 27001:2022 text not reproduced · <span id="fver">—</span></div>
+  <div class="fl"><b>Atlas Compliance Intelligence</b> — deterministic NIS2 readiness engine · The model locates &amp; quotes evidence; the engine assigns every level, gap and verdict.</div>
+  <div class="fl" style="text-align:right">Every artefact is <b>DRAFT — REQUIRES REVIEW</b> · ISO/IEC 27001:2022 text not reproduced (clause numbers only) · <span id="fver">—</span></div>
 </footer>
 
 <script>
-/* ===== NO ENGINE HERE — every legal/heuristic value comes from the API. ===== */
+/* =====================================================================
+   NO ENGINE HERE. Every maturity level, gap, and verdict shown on this
+   page is read verbatim from the deterministic API (/classify, /assess/control).
+   JavaScript selects inputs and renders output — it never computes a
+   level, a gap, or a verdict. The residual-risk band and the PBC ticks
+   are presentational reflections of engine output (finding.gap / status /
+   evidence), labelled as such; they feed nothing back into scoring.
+   ===================================================================== */
 const $=id=>document.getElementById(id);
+const CONTROL_ID='RM-21D-01';
 let uploaded=[];
+let selectedLevel=3;
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function money(n){return '€'+Math.round(n).toLocaleString('en-US');}
-function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
 
 const MAT_SHORT=['None','Initial','Repeatable','Defined','Managed'];
 const MAT_FULL=['None','Initial / ad hoc','Repeatable (documented)','Defined (operating)','Managed / measured'];
-const MAT_MAX=MAT_SHORT.length-1; // 4 maturity levels above None
 
 const ICON={
   ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
   warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L14.7 3.9a2 2 0 00-3.4 0z"/></svg>',
   err:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>',
   info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4m0-4h.01"/></svg>',
-  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>',
-  arrow:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
   doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>',
-  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>',
+  plug:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5M9 8V2M15 8V2M7 8h10v3a5 5 0 01-10 0z"/></svg>',
+  print:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>',
 };
+
+/* ---- static control metadata (Atlas's own crosswalk; ISO/CSF are clause numbers ONLY, no standard text) ---- */
+const CONTROL={
+  objective:'Supply-chain security — the security of supplier / service-provider relationships, assessed and contractually required.',
+  iso:['A.5.19','A.5.20','A.5.21','A.5.22'],
+  csf_function:'GV',
+  csf_subs:['GV.SC-01','GV.SC-06','GV.SC-07','ID.RA-10'],
+  // PBC = "provided by client" — the auditor's request list for this control (Atlas paraphrase, from the ruleset).
+  // `kind` maps each request to the evidence class the engine reports; 'interview' is out of documentary scope.
+  pbc:[
+    {t:'Third-party security policy & procedure', kind:'design'},
+    {t:'Supplier register with risk ratings', kind:'operating'},
+    {t:'Sample supplier contracts (security obligations)', kind:'operating'},
+    {t:'Interview: vendor risk owner', kind:'interview'},
+  ],
+};
+
+/* ---- sample inputs (clearly labelled as sample; the engine run over them is real) ---- */
+const DESIGN_SAMPLE=
+`SUPPLIER SECURITY & THIRD-PARTY RISK POLICY (v3.1, approved 2026-02)
+
+1. Purpose. This policy governs the security of supplier and service-provider
+   relationships in line with the organisation's cyber risk-management measures.
+
+2. Third-party risk procedure. Every supplier is evaluated under the documented
+   third-party risk-assessment procedure, with security requirements set
+   proportionate to the sensitivity of the data it processes.
+
+3. Supplier criticality rating. Suppliers are rated on a documented criticality
+   scale (Critical / High / Standard) using the supplier criticality-rating
+   methodology in Annex A. Criticality drives assessment depth and reassessment
+   frequency.
+
+4. Contractual security clauses. Standard contracts require suppliers to maintain
+   security controls, notify the organisation of incidents affecting its data, and
+   grant a right to audit. A data-processing addendum applies where personal data
+   is processed.`;
+
+const OPERATING_SAMPLE=
+`SUPPLY-CHAIN OPERATING EVIDENCE PACK (period 2025-07 to 2026-06)
+
+A. Supplier register. The maintained supplier register lists 84 active suppliers,
+   each with a recorded criticality rating and the date of its last risk
+   assessment. 22 suppliers are rated Critical; all 22 were assessed within the
+   period.
+
+B. Executed contracts. Sampled executed contracts with three Critical suppliers
+   each carry the security-obligations schedule and the right-to-audit clause, with
+   a 24-hour incident-notification requirement.
+
+C. Ongoing monitoring. Quarterly supplier reviews were performed over the window;
+   the review log records assessment outcomes and remediation actions tracked to
+   closure for the sampled Critical suppliers.`;
+
+/* ---- canned per-tier entity profiles (Option B).
+   The selector sets a target rung by choosing an entity profile whose deterministic
+   classification yields that rung. The bar itself is ALWAYS computed by the engine
+   (build_bar from the proportionality tier) — never in JS. See barbox for the live derivation. */
+function entityForLevel(lv){
+  const base=(name,staff,to,bs,annex,xborder)=>({
+    root:{name,staff,turnover_eur:to,balance_sheet_eur:bs,holding_pct:100,related:[]},
+    sector_annex:annex, sector_name:null, special_flags:[],
+    art2_2_designation:null, years_breached:2, prior_band:null,
+    proportionality:{cross_border_systemic:xborder,n_geographies:1,n_entities:1,special_entity:false,supply_chain:'low'},
+  });
+  if(lv===2) return base('Sample entity — Standard tier',120,30000000,25000000,'I','cross_border'); // medium+important+I -> Standard -> L2
+  if(lv===4) return base('Sample entity — Critical tier',600,200000000,100000000,'I','systemic');   // essential floored to Critical -> L4
+  return base('Sample entity — Enhanced tier',600,200000000,100000000,'I','none');                  // large+essential+I -> Enhanced -> L3
+}
 
 async function loadVersion(){
   try{const v=await (await fetch('/version')).json();
-    const t=`engine ${v.engine_version} · ruleset ${v.ruleset_version} · ${v.ruleset_sha256.slice(0,8)}`;
-    $('ver').textContent=t; $('fver').innerHTML='ruleset <code>'+esc(v.ruleset_version)+'</code> · sha256 <code>'+esc(v.ruleset_sha256.slice(0,12))+'…</code>';}
+    $('ver').textContent=`engine ${v.engine_version} · ruleset ${v.ruleset_version} · ${v.ruleset_sha256.slice(0,8)}`;
+    $('fver').innerHTML='ruleset <code>'+esc(v.ruleset_version)+'</code> · sha256 <code>'+esc(v.ruleset_sha256.slice(0,12))+'…</code>';}
   catch(e){$('ver').textContent='engine (offline)';}
 }
-loadVersion();
 
-function entityPayload(){
-  const num=v=>{const n=parseFloat(v);return v===''||isNaN(n)?null:n;};
-  const flags=[...document.querySelectorAll('#flags input:checked')].map(c=>c.value);
-  return {
-    sector_annex:$('annex').value,
-    sector_name:$('sector_name').value||null,
-    root:{name:$('sector_name').value||'entity',staff:num($('staff').value),
-          turnover_eur:num($('turnover').value),balance_sheet_eur:num($('balance').value)},
-    special_flags:flags,
-    art2_2_designation:$('art22').value||null,
-    prior_band:$('prior').value||null,
-    years_breached:parseInt($('years').value||'2',10),
-    proportionality:{cross_border_systemic:'none',n_geographies:1,n_entities:1,special_entity:flags.length>0,supply_chain:'low'}
-  };
-}
-
-function trap(){
-  $('annex').value='I';$('sector_name').value='Energy';
-  $('staff').value=40;$('turnover').value=15000000;$('balance').value=5000000;
-  document.querySelectorAll('#flags input').forEach(c=>c.checked=false);
-  $('art22').value='';$('prior').value='';$('years').value=2;
-  classify();
-}
-
-function clsName(c){return ({essential:'ESSENTIAL',important:'IMPORTANT',out_of_scope:'OUT OF SCOPE',deferred_designation:'DEFERRED · Art 2(2)'})[c]||c;}
-
-/* ---- proportionality presentation metadata ---- */
-const TIERS=[
-  {name:'Foundational',lo:0,hi:39,w:40,color:'var(--t0)',short:'Found.'},
-  {name:'Standard',    lo:40,hi:59,w:20,color:'var(--t1)',short:'Standard'},
-  {name:'Enhanced',    lo:60,hi:79,w:20,color:'var(--t2)',short:'Enhanced'},
-  {name:'Critical',    lo:80,hi:100,w:20,color:'var(--t3)',short:'Critical'},
-];
-function tierColor(name){const t=TIERS.find(t=>t.name===name);return t?t.color:'var(--ink-3)';}
-const DRIVERS={
-  entity_class:         {label:'Regulatory class',           max:25, hint:'Essential entities carry the highest statutory duties.', color:'#1f3a68'},
-  size_band:            {label:'Entity size',                max:25, hint:'Larger entities carry greater systemic weight.',       color:'#3567e0'},
-  sector_annex:         {label:'Sector criticality',         max:15, hint:'Annex I sectors are high-criticality.',               color:'#4f93e6'},
-  cross_border_systemic:{label:'Cross-border / systemic role',max:15, hint:'Systemic or sole-national reach in a Member State.',  color:'#2f9b94'},
-  footprint:            {label:'Operational footprint',      max:10, hint:'Geographic spread and number of group entities.',     color:'#5f9e3f'},
-  special_entity:       {label:'Special-entity status',      max:5,  hint:'QTSP / DNS / TLD / e-comms / public administration.',  color:'#c08a2e'},
-  supply_chain:         {label:'Supply-chain exposure',      max:5,  hint:'Dependence on critical third-party suppliers.',       color:'#a85d3c'},
-};
-const DRIVER_SCALE=25; // largest single-driver contribution -> bars are absolute-comparable
-
-function meterHtml(score,raw){
-  const segs=TIERS.map(t=>`<span class="seg" style="flex:${t.w};background:${t.color}"></span>`).join('');
-  const ticks=[0,40,60,80,100].map(v=>`<span style="left:${v}%">${v}</span>`).join('');
-  const labels=TIERS.map(t=>`<span style="flex:${t.w};color:${t.color}">${t.short}</span>`).join('');
-  const pos=clamp(score,0,100);
-  // keep the bubble inside the track at the extremes (needle stays truthful on pos%)
-  const bubShift=pos<7?`calc(-50% + ${((7-pos)*1.6).toFixed(1)}px)`:pos>93?`calc(-50% - ${((pos-93)*1.6).toFixed(1)}px)`:'-50%';
-  const rawPin=(raw!=null&&raw!==score)?`<div class="pin-raw" style="left:${clamp(raw,0,100)}%"><div class="nd" title="raw score ${raw} (before floor)"></div></div>`:'';
-  return `<div class="meter">
-    <div class="meter-track">${segs}
-      ${rawPin}
-      <div class="pin" style="left:${pos}%"><div class="bub num" style="transform:translateX(${bubShift})">${score}</div><div class="needle"></div></div>
-    </div>
-    <div class="meter-scale num">${ticks}</div>
-    <div class="meter-labels">${labels}</div>
-    <div class="meter-axis"><span>lighter obligations</span><span>more demanding bar</span></div>
-  </div>`;
-}
-
-function driversHtml(points){
-  const rows=Object.keys(DRIVERS).map(k=>({key:k,pts:(points&&points[k])||0,...DRIVERS[k]}))
-    .sort((a,b)=>b.pts-a.pts || b.max-a.max);
-  const total=rows.reduce((s,d)=>s+d.pts,0);
-  const body=rows.map(d=>{
-    const fill=clamp(d.pts/DRIVER_SCALE*100,0,100);
-    const ghost=clamp(d.max/DRIVER_SCALE*100,0,100);
-    const val=d.pts===0?'—':'+'+d.pts+'<span class="dpmax">/'+d.max+'</span>';
-    return `<div class="drv${d.pts===0?' zero':''}">
-      <span class="dt" style="background:${d.color}"></span>
-      <div class="dm"><div class="dn">${d.label}</div><div class="dh">${d.hint}</div></div>
-      <div class="dbarwrap"><div class="dghost" style="width:${ghost}%"></div><div class="dfill" style="width:${fill}%;background:${d.color}"></div></div>
-      <div class="dp num">${val}</div>
-    </div>`;
-  }).join('');
-  const totalRow=`<div class="drv total">
-      <span class="dt" style="background:transparent"></span>
-      <div class="dm"><div class="dn">Raw weighted total</div></div>
-      <div class="dbarwrap"><div class="dfill" style="width:${clamp(total,0,100)}%;background:var(--ink-3)"></div></div>
-      <div class="dp num">${total}<span class="dpmax">/100</span></div>
-    </div>`;
-  return body+totalRow;
-}
-
-function renderProportionality(p,b){
-  if(!p){$('prop').innerHTML=`<div class="empty"><div class="ei">${ICON.search}</div><div class="et">Awaiting determination</div><div class="es">Run a determination to see the proportionality profile.</div></div>`;return;}
-  const tc=tierColor(p.tier);
-  const floorsHtml=(p.floors_applied&&p.floors_applied.length)?
-    `<div class="floors">${p.floors_applied.map(f=>`<div class="floor">${ICON.up}<span>${esc(f)}</span></div>`).join('')}</div>`:'';
-  $('prop').innerHTML=`
-    <div class="define"><b>What this means.</b> Proportionality calibrates <i>how much cybersecurity rigor is appropriate</i> for this entity. A higher score reflects greater size, criticality, sector importance and systemic reach — and raises the maturity bar every in-scope control must meet. <b>A higher score is not a grade</b> — it means more is expected of the entity, not that it is more compliant.</div>
-    <div class="score-hero">
-      <div class="score-dial">
-        <div class="dial-ring" style="--pct:${p.score};--ac:${tc}">
-          <div class="dial-inner"><span class="big num">${p.score}</span><span class="den num">/ 100</span></div>
-        </div>
-        <div class="tiername" style="background:${tc}">${esc(p.tier)} tier</div>
-        ${p.raw_score!==p.score?`<div class="raw num">raw ${p.raw_score} → lifted to ${p.score} by floor</div>`:''}
-      </div>
-      <div class="score-expl">
-        <div class="et">${esc(p.tier)} — what's expected</div>
-        <div class="ex">${esc(p.tier_expectation||'')}</div>
-      </div>
-    </div>
-    ${meterHtml(p.score,p.raw_score)}
-    <div class="drv-head"><span class="t">What drives this score</span><span class="h">scaled to absolute contribution</span></div>
-    <div class="drv-legend"><span><i class="lg-fill"></i>points earned</span><span><i class="lg-ghost"></i>maximum for this driver</span></div>
-    ${driversHtml(p.points)}
-    ${floorsHtml}
-    ${b?`<div class="consequence">
-      <span class="arrow">${ICON.arrow}</span>
-      <div class="ctxt">
-        <div class="ct">Resulting compliance baseline</div>
-        <div class="cv">Every in-scope control must reach <span class="lvbadge lv${b.required_level}">L${b.required_level}</span> ${esc(b.required_name)} <span style="color:var(--ink-4)">(of ${MAT_MAX} maturity levels)</span> &nbsp;<span style="color:var(--ink-4)">— ${esc(b.note||'')}</span></div>
-      </div>
-    </div>`:''}
-    <div class="disclaim">Heuristic, tunable, and carrying <b>no statutory force</b>. Weights live in the versioned ruleset; a rung is never a safe harbour. The figures above inform — they never replace — the Art 21(1) judgment of a qualified reviewer.</div>`;
-}
-
-let lastClassify=null;
-async function classify(){
-  $('cmsg').innerHTML=`<div class="msg info"><span class="spin"></span> Running deterministic determination…</div>`;
-  try{
-    const r=await fetch('/classify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entityPayload())});
-    const d=await r.json();lastClassify=d;$('cmsg').innerHTML='';
-    if(d.status==='INSUFFICIENT_INPUT'){
-      $('result').innerHTML=`<div class="msg err">${ICON.err}<div><b>INSUFFICIENT_INPUT</b> — no verdict issued. The engine refuses to guess on malformed facts.<ul>${d.reasons.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></div>`;
-      renderProportionality(null);
-      return;
-    }
-    renderDetermination(d.verdict);
-    renderProportionality(d.proportionality,d.bar);
-  }catch(e){
-    $('cmsg').innerHTML='';
-    $('result').innerHTML=`<div class="msg err">${ICON.err}<div><b>Determination unavailable</b> — the request failed (${esc(e)}). Check your connection and run the determination again.</div></div>`;
-    renderProportionality(null);
-  }
-}
-
-function renderDetermination(v){
-  const flagsHtml=v.flags&&v.flags.length?`<div class="flagbox">${ICON.warn}<div>${v.flags.map(esc).join('<br>')}</div></div>`:'';
-  const auditHtml=v.audit&&v.audit.length?`<details class="audit-wrap"><summary><span class="caret">▶</span> Audit trail · ${v.audit.length} step${v.audit.length>1?'s':''}</summary>${v.audit.map(a=>`<div class="audit">${esc(a)}</div>`).join('')}</details>`:'';
-  $('result').innerHTML=`
-    <div class="verdict-hero">
-      <div class="scope-badge ${v.in_scope?'scope-in':'scope-out'}">
-        <span class="lbl">SCOPE</span><span class="val">${v.in_scope?'IN':'OUT'}</span>
-      </div>
-      <div class="vmeta">
-        <div class="vrow"><span class="pill cls-${v.entity_class}">${clsName(v.entity_class)}</span></div>
-        <div class="vrow" style="margin-top:7px;color:var(--ink-3);font-size:12px">${v.in_scope?'Subject to NIS2 obligations':'Not subject to NIS2 obligations'} · Annex ${esc(v.sector_annex)}</div>
-      </div>
-    </div>
-    <div class="kvgrid">
-      <div class="kv"><div class="k">Size band</div><div class="v">${esc(v.size_band)}${v.raw_size_band!==v.size_band?` <span style="font-weight:600;color:var(--ink-4)">(raw ${esc(v.raw_size_band)})</span>`:''}</div></div>
-      <div class="kv"><div class="k">Sector annex</div><div class="v">Annex ${esc(v.sector_annex)}</div></div>
-      <div class="kv full"><div class="k">Consolidated figures · Art 6</div><div class="v sm num">${v.consolidated.staff} staff · ${money(v.consolidated.turnover_eur)} turnover · ${money(v.consolidated.balance_sheet_eur)} balance</div></div>
-    </div>
-    <div class="reasonbox">${esc(v.reason)}</div>
-    ${auditHtml}
-    ${flagsHtml}`;
-}
-
-/* ---- file upload ---- */
+/* ---- files ---- */
 $('drop').onclick=()=>$('file').click();
 $('file').onchange=e=>setFiles([...e.target.files]);
 ['dragover','dragenter'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.add('over');}));
@@ -772,135 +564,316 @@ function setFiles(fs){
   $('files').innerHTML=fs.length?fs.map(f=>`<div class="fileitem">${ICON.doc}<span class="fn">${esc(f.name)}</span><span class="fs num">${fsize(f.size)}</span></div>`).join(''):'';
 }
 
-async function assess(){
-  if(!uploaded.length){$('amsg').innerHTML=`<div class="msg warn">${ICON.warn}<span>Choose at least one document first.</span></div>`;return;}
-  $('amsg').innerHTML=`<div class="msg info"><span class="spin"></span> Ingesting → extracting (model) → scoring (deterministic)…</div>`;
-  const fd=new FormData();
-  fd.append('control_id','RM-21D-01');
-  fd.append('entity',JSON.stringify(entityPayload()));
-  uploaded.forEach(f=>fd.append('files',f));
-  try{
-    const r=await fetch('/assess/control',{method:'POST',body:fd});
-    if(r.status===503){let raw=await r.text();let detail=raw;try{detail=JSON.parse(raw).detail||raw;}catch(_){}$('amsg').innerHTML=`<div class="msg warn">${ICON.warn}<div><b>Extraction unavailable.</b> ${esc(detail)}</div></div>`;return;}
-    if(!r.ok){const raw=await r.text();let detail=raw;try{detail=JSON.parse(raw).detail||raw;}catch(_){}$('amsg').innerHTML=`<div class="msg err">${ICON.err}<span>Error ${r.status}: ${esc(detail)}</span></div>`;return;}
-    const d=await r.json();
-    const n=d.facts.length;
-    $('amsg').innerHTML=`<div class="msg ok">${ICON.ok}<span><b>${n} cited fact${n===1?'':'s'}</b> extracted &amp; provenance-verified; maturity assigned deterministically.</span></div>`;
-    renderFinding(d.finding,d.facts);
-  }catch(e){$('amsg').innerHTML=`<div class="msg err">${ICON.err}<span>Request failed: ${esc(e)}</span></div>`;}
+let sampleLoaded=false;
+function loadSample(){
+  $('policy').value=DESIGN_SAMPLE;
+  $('operating').value=OPERATING_SAMPLE;
+  sampleLoaded=true;
+  $('amsg').innerHTML=`<div class="samplenote">${ICON.info}<div><b>Sample supplier-security policy loaded.</b> This is sample input — not your own evidence. The assessment below is a live engine run over this text (design evidence only; tick “also provide operating evidence” to add the operating pack).</div></div>`;
+}
+function toggleOperating(){
+  $('opwrap').style.display=$('opevi').checked?'block':'none';
 }
 
+/* ---- target level ---- */
+function pickLevel(lv){
+  selectedLevel=lv;
+  [...$('levelseg').children].forEach(b=>b.classList.toggle('on',+b.dataset.lv===lv));
+  previewBar();
+}
+
+async function previewBar(){
+  $('bartext').textContent='Deriving the required rung…';
+  try{
+    const r=await fetch('/classify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entityForLevel(selectedLevel))});
+    const d=await r.json();
+    if(d.status!=='ok'||!d.bar){$('bartext').innerHTML='Bar unavailable for this profile.';return;}
+    const b=d.bar, p=d.proportionality;
+    const l4note=b.required_level===4
+      ? ` <span style="color:#8a5a00">Note: a documents-only review tops out at achieved <b>L3</b> (Defined/operating) — L4 “Managed/measured” needs monitoring metrics on a cadence, which documentary evidence cannot establish, so L4 will always show a residual gap here.</span>`
+      : '';
+    $('bartext').innerHTML=
+      `Required rung <span class="lvbadge lv${b.required_level}">L${b.required_level}</span> <b>${esc(b.required_name)}</b> — the engine derives this from the sample entity's <b>${esc(p.tier)}</b> proportionality tier (${p.score}/100). `+
+      `In the full product the bar is derived from the entity's proportionality tier; here you set the target directly.${l4note}`;
+  }catch(e){$('bartext').textContent='Bar unavailable — engine not reachable.';}
+}
+
+/* ---- assemble upload ---- */
+function collectFiles(){
+  const files=[...uploaded];
+  const policy=$('policy').value.trim();
+  if(policy) files.push(new File([policy],'policy.txt',{type:'text/plain'}));
+  if($('opevi').checked){
+    const op=$('operating').value.trim();
+    if(op) files.push(new File([op],'operating-evidence.txt',{type:'text/plain'}));
+  }
+  return files;
+}
+
+/* ---- pipeline cosmetics ---- */
+function pipelineReset(){[...document.querySelectorAll('.pstep')].forEach(s=>s.classList.remove('active','done'));}
+function pipelineRun(){
+  const steps=[...document.querySelectorAll('.pstep')];
+  const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  if(reduce){steps.forEach(s=>s.classList.add('active'));return;}
+  steps.forEach((s,i)=>setTimeout(()=>{s.classList.add('active');if(i>0)steps[i-1].classList.add('done');},i*140));
+}
+
+/* ---- run ---- */
+async function runReview(){
+  const files=collectFiles();
+  if(!files.length){$('amsg').innerHTML=`<div class="msg warn">${ICON.warn}<span>Add a document, paste policy text, or load the sample policy first.</span></div>`;return;}
+  $('amsg').innerHTML=`<div class="msg info"><span class="spin"></span> Ingest → extract (model, quote-only) → verify provenance → score (deterministic)…</div>`;
+  pipelineReset();pipelineRun();
+  const fd=new FormData();
+  fd.append('control_id',CONTROL_ID);
+  fd.append('entity',JSON.stringify(entityForLevel(selectedLevel)));
+  files.forEach(f=>fd.append('files',f));
+  try{
+    const r=await fetch('/assess/control',{method:'POST',body:fd});
+    if(r.status===503){$('amsg').innerHTML='';renderEngineDown(await detail(r));return;}
+    if(!r.ok){$('amsg').innerHTML=`<div class="msg err">${ICON.err}<span>Error ${r.status}: ${esc(await detail(r))}</span></div>`;return;}
+    const d=await r.json();
+    if(!d.finding){
+      // classification did not reach a bar (e.g. INSUFFICIENT_INPUT) — no verdict, honest state.
+      renderEngineDown('The engine returned a classification but no scored finding for this input.');
+      return;
+    }
+    const n=d.facts.length;
+    $('amsg').innerHTML=`<div class="msg ok">${ICON.ok}<span><b>${n} cited fact${n===1?'':'s'}</b> extracted &amp; provenance-verified; maturity assigned deterministically.</span></div>`;
+    renderReport(d.finding,d.facts,d.classification);
+    $('report').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'});
+  }catch(e){
+    $('amsg').innerHTML='';
+    renderEngineDown('Network error — the request to the engine failed ('+e+').');
+  }
+}
+async function detail(r){let raw=await r.text();try{return JSON.parse(raw).detail||raw;}catch(_){return raw;}}
+
+/* ---- honest degradation: engine unreachable / no key -> NO verdict, never a fake finding ---- */
+function renderEngineDown(msg){
+  $('report').innerHTML=`
+    <div class="downstate">
+      <div class="di2">${ICON.plug}</div>
+      <div class="dt2">Engine not connected — no verdict</div>
+      <div class="ds2">${esc(msg||'')}<br><br>Extraction requires the model service (<code>ANTHROPIC_API_KEY</code>). Atlas <b>fails closed</b>: with no engine it shows nothing rather than a fabricated finding. The deterministic bar above is still live; re-run once the engine is reachable.</div>
+    </div>`;
+}
+
+/* ---- maturity ladder (renders engine achieved/required; computes nothing) ---- */
 function ladderHtml(achieved,required,vcls){
   const rungs=[0,1,2,3,4].map(lv=>{
-    const attained = lv>=1 && lv<=achieved;      // L0 ("None") is never an accomplishment
-    const isAch = lv===achieved;
-    const isReq = lv===required;
-    const isMet = isReq && achieved===required;
-    const inGap = lv>achieved && lv<=required;    // rungs still owed
-    const cls=['rung', attained?'filled':'', isAch?'ach':'', isAch?vcls:'',
-               inGap?'gaprung':'', isReq?'req':'', isMet?'met':''].filter(Boolean).join(' ');
-    const flag = isReq ? (isMet
-        ? `<div class="reqflag metflag">MET<div class="tri"></div></div>`
-        : `<div class="reqflag">REQ<div class="tri"></div></div>`) : '';
+    const attained=lv>=1&&lv<=achieved;
+    const isAch=lv===achieved;
+    const isReq=lv===required;
+    const isMet=isReq&&achieved===required;
+    const inGap=lv>achieved&&lv<=required;
+    const cls=['rung',attained?'filled':'',isAch?'ach':'',isAch?vcls:'',inGap?'gaprung':'',isReq?'req':'',isMet?'met':''].filter(Boolean).join(' ');
+    const flag=isReq?(isMet?`<div class="reqflag metflag">MET<div class="tri"></div></div>`:`<div class="reqflag">REQ<div class="tri"></div></div>`):'';
     return `<div class="${cls}" title="L${lv} · ${MAT_FULL[lv]}">${flag}<div class="bar num">L${lv}</div><div class="nm">${MAT_SHORT[lv]}</div></div>`;
   }).join('');
   return `<div class="ladder"><div class="ladder-rungs">${rungs}</div></div>`;
 }
 
-function renderFinding(f,facts){
-  if(!f){$('findingcard').style.display='none';return;}
-  $('findingcard').style.display='block';
+/* ---- residual-risk band: a PRESENTATION of the engine's gap/status (no new scoring) ---- */
+function residualRisk(f){
+  if(f.status==='vetoed') return {cls:'rr-high',label:'Critical — disqualified'};
+  if(f.status==='insufficient_evidence') return {cls:'rr-und',label:'Undetermined'};
+  if(f.gap<=0) return {cls:'rr-low',label:'Low'};
+  if(f.gap===1) return {cls:'rr-elev',label:'Elevated'};
+  return {cls:'rr-high',label:'High'};
+}
 
+/* ---- plain-language narrative, templated from engine output (explains it; computes nothing) ---- */
+function findingNarrative(f){
+  if(f.status==='meets')
+    return `The control is evidenced at <b>L${f.achieved_level} (${esc(f.achieved_name)})</b>, at or above the required <b>L${f.required_level}</b> bar. Cited design and operating evidence substantiate that the control is both documented and operating over the window.`;
+  if(f.status==='vetoed')
+    return `A disqualifying clause in the cited evidence defeats the control (presence ≠ conformance); the achieved rung is capped at <b>L1</b> against a required L${f.required_level}. See the disqualifying findings below.`;
+  if(f.status==='insufficient_evidence')
+    return `There is not enough cited, provenance-bearing evidence to credit a maturity level for this control.`;
+  // gap
+  const opGap=f.operating_done<1;
+  const base=`The control reaches <b>L${f.achieved_level} (${esc(f.achieved_name)})</b> against a required <b>L${f.required_level} (${esc(f.required_name)})</b> — a residual gap of ${f.gap} rung${f.gap>1?'s':''}.`;
+  if(f.achieved_level===2&&opGap)
+    return base+` Design evidence is complete and cited, but evidence that the control <i>operated</i> across the window was not cited, so the achieved maturity is capped at documented (L2).`;
+  return base;
+}
+function recommendation(f){
+  if(f.status==='meets')
+    return `Maintain evidence currency and re-assess on the standard cadence. No remediation required for the current bar.`;
+  const parts=[];
+  if(f.design_done<1)
+    parts.push(`complete the design set — supplier security policy &amp; third-party risk procedure, a documented supplier criticality-rating methodology, and standard contract security clauses with a right-to-audit`);
+  if(f.operating_done<1)
+    parts.push(`obtain and cite operating evidence across the window — a supplier register with criticality &amp; risk assessments, sample executed contracts carrying security obligations, and supplier monitoring / reassessment records`);
+  if(f.status==='vetoed')
+    parts.push(`remove the disqualifying clause — tighten any supplier incident-notification window to feed the entity's own 24h / 72h reporting cascade`);
+  if(!parts.length) return `Address the cited gaps to reach the required rung.`;
+  return `To close the gap: `+parts.join('; ')+`. These are the artefacts that move the control up the ladder to the required rung.`;
+}
+
+/* ---- PBC checklist marks: reflect whether the ENGINE returned cited evidence of each kind ---- */
+function pbcMark(kind,hasDesign,hasOperating){
+  if(kind==='interview') return {cls:'pm-na',g:'–',h:'out of documentary scope'};
+  if(kind==='design') return hasDesign?{cls:'pm-yes',g:'✓',h:'cited'}:{cls:'pm-no',g:'✕',h:'not provided'};
+  return hasOperating?{cls:'pm-yes',g:'✓',h:'cited'}:{cls:'pm-no',g:'✕',h:'not provided'};
+}
+
+function renderReport(f,facts,cls){
+  const fail=f.status==='insufficient_evidence'||f.status==='vetoed';
+  const vcls=f.status==='meets'?'v-ok':(fail?'v-bad':'v-gap');
+  const vcol=f.status==='meets'?'var(--ok)':(fail?'var(--bad)':'var(--warn)');
   const statusMeta={
-    meets:{t:'Meets the proportionate bar',s:'Achieved maturity is at or above the required rung.',i:ICON.ok},
-    gap:{t:'Below the proportionate bar',s:'Achieved maturity falls short of the required rung — a remediation gap.',i:ICON.warn},
-    insufficient_evidence:{t:'Insufficient evidence',s:'Not enough cited, provenance-bearing evidence to credit a maturity level.',i:ICON.err},
-    vetoed:{t:'Disqualified by a veto finding',s:'A documented clause defeats this control — the achieved rung is capped at L1 regardless of completeness.',i:ICON.err},
-  }[f.status]||{t:f.status,s:'',i:ICON.info};
+    meets:{t:'MEETS',s:'Achieved maturity is at or above the required rung.',i:ICON.ok,sb:'sb-meets'},
+    gap:{t:'GAP',s:'Achieved maturity falls short of the required rung.',i:ICON.warn,sb:'sb-gap'},
+    insufficient_evidence:{t:'INSUFFICIENT EVIDENCE',s:'Not enough cited evidence to credit a level.',i:ICON.err,sb:'sb-insufficient_evidence'},
+    vetoed:{t:'DISQUALIFIED',s:'A cited clause defeats the control.',i:ICON.err,sb:'sb-vetoed'},
+  }[f.status]||{t:esc(f.status),s:'',i:ICON.info,sb:'sb-gap'};
+  const rr=residualRisk(f);
 
-  const fail = f.status==='insufficient_evidence' || f.status==='vetoed';
-  const vcls = f.status==='meets' ? 'v-ok' : (fail ? 'v-bad' : 'v-gap');
-  const vcol = f.status==='meets' ? 'var(--ok)' : (fail ? 'var(--bad)' : 'var(--warn)');
+  const design=(f.evidence||[]).filter(e=>e.evidence_kind==='design');
+  const operating=(f.evidence||[]).filter(e=>e.evidence_kind==='operating');
+  const hasDesign=design.length>0, hasOperating=operating.length>0;
 
-  // confidence lookup from the raw extracted facts
+  // confidence lookup from raw facts
   const confBy={};
   (facts||[]).forEach(x=>{confBy[[x.evidence_kind,x.doc_id,x.page,(x.source_quote||'').trim()].join('|')]=x.confidence;});
-
-  const evHtml=(f.evidence&&f.evidence.length)?f.evidence.map(e=>{
+  const evCard=e=>{
     const c=confBy[[e.evidence_kind,e.doc_id,e.page,(e.source_quote||'').trim()].join('|')];
     let conf='';
-    if(typeof c==='number'){
-      const cc=c>=0.8?'var(--ok)':(c>=0.5?'var(--warn)':'var(--bad)');
-      conf=`<span class="conf" title="extraction confidence">${Math.round(c*100)}%<span class="cbar"><span class="cbf" style="width:${Math.round(c*100)}%;background:${cc}"></span></span></span>`;
-    }
-    return `<div class="ev ${e.evidence_kind}">
-      <div class="ev-top"><span class="ektag ${e.evidence_kind}">${e.evidence_kind}</span><span class="claim">${esc(e.claim)}</span>${conf}</div>
+    if(typeof c==='number'){const cc=c>=0.8?'var(--ok)':(c>=0.5?'var(--warn)':'var(--bad)');
+      conf=`<span class="conf" title="extraction confidence">${Math.round(c*100)}%<span class="cbar"><span class="cbf" style="width:${Math.round(c*100)}%;background:${cc}"></span></span></span>`;}
+    return `<div class="ev ${esc(e.evidence_kind)}">
+      <div class="ev-top"><span class="ektag ${esc(e.evidence_kind)}">${esc(e.evidence_kind)}</span><span class="claim">${esc(e.claim)}</span>${conf}</div>
       <div class="quote">“${esc(e.source_quote)}”</div>
       <div class="cite">${ICON.doc}${esc(e.doc_id)} · page ${esc(e.page)}</div>
     </div>`;
-  }).join(''):`<div class="msg warn" style="margin-top:0">${ICON.warn}<span>No provenance-bearing evidence found — status <b>insufficient_evidence</b>.</span></div>`;
+  };
 
-  const gapPill=f.status==='vetoed'?`<span class="gappill gp-n">Disqualified · capped at L1</span>`:(f.gap===0?`<span class="gappill gp-0">Meets — no gap</span>`:`<span class="gappill gp-n">Gap of ${f.gap} rung${f.gap>1?'s':''}</span>`);
+  const isoChips=CONTROL.iso.map(c=>`<span class="mapchip iso"><span class="mk">ISO 27001:2022</span>${esc(c)}</span>`).join('');
+  const csfChips=`<span class="mapchip csf"><span class="mk">CSF 2.0</span>${esc(CONTROL.csf_function)}</span>`+
+    CONTROL.csf_subs.map(c=>`<span class="mapchip csf">${esc(c)}</span>`).join('');
+
+  const designEv=hasDesign?design.map(evCard).join(''):`<div class="ev-empty">${ICON.warn} No design evidence was cited — the control as written could not be substantiated from the input.</div>`;
+  const opEv=hasOperating?operating.map(evCard).join(''):`<div class="ev-empty"><b>No operating evidence cited.</b> A documented policy alone evidences design, not operation — so the control is capped at <b>L2 (documented)</b>. To reach L3 (operating), cite evidence that the control actually ran across the window (supplier register, executed contracts, monitoring records).</div>`;
 
   const vetoHtml=(f.vetoes&&f.vetoes.length)?`
-    <div class="veto-head"><h3>${ICON.err} Disqualifying findings</h3><span class="cnt">${f.vetoes.length} veto${f.vetoes.length===1?'':'es'} · caps the rung at L1</span></div>
-    ${f.vetoes.map(v=>`<div class="vetobox">
-      <div class="vtop"><span class="vtag">Veto</span><span class="vref">defeats ${esc(v.defeats_ref||'')}</span></div>
-      <div class="vrat">${esc(v.rationale||'')}</div>
-      ${v.detail?`<div class="vdet">${esc(v.detail)}</div>`:''}
-      ${v.matched_quote?`<div class="quote">“${esc(v.matched_quote)}”</div>`:''}
-      <div class="cite">${ICON.doc}${esc(v.doc_id||'')} · page ${esc(v.page)}</div>
-    </div>`).join('')}`:'';
+    <div class="hr"></div>
+    <div class="sect">
+      <div class="veto-head"><h3>${ICON.err} Disqualifying findings</h3><span class="gappill gp-n">${f.vetoes.length} veto${f.vetoes.length===1?'':'es'} · caps the rung at L1</span></div>
+      ${f.vetoes.map(v=>`<div class="vetobox">
+        <div class="vtop"><span class="vtag">Veto</span><span class="vref">defeats ${esc(v.defeats_ref||'')}</span></div>
+        <div class="vrat">${esc(v.rationale||'')}</div>
+        ${v.matched_quote?`<div class="quote">“${esc(v.matched_quote)}”</div>`:''}
+        <div class="cite">${ICON.doc}${esc(v.doc_id||'')} · page ${esc(v.page)}</div>
+      </div>`).join('')}
+    </div>`:'';
 
-  $('finding').innerHTML=`
-    <div class="status-banner sb-${f.status}">
-      <div class="si">${statusMeta.i}</div>
-      <div class="st"><div class="stt">${statusMeta.t}</div><div class="sts">${statusMeta.s}</div></div>
-      ${gapPill}
-    </div>
+  const pbcRows=CONTROL.pbc.map(p=>{
+    const m=pbcMark(p.kind,hasDesign,hasOperating);
+    return `<div class="pbc-row"><div class="pbc-mark ${m.cls}">${m.g}</div><div class="pt">${esc(p.t)}</div><div class="ph">${m.h}</div></div>`;
+  }).join('');
 
-    ${ladderHtml(f.achieved_level,f.required_level,vcls)}
-    <div class="ladder-legend">
-      <span class="ll-item"><span class="lvbadge" style="background:${vcol}">L${f.achieved_level}</span> Achieved · <span class="lk">${esc(f.achieved_name)}</span></span>
-      <span class="ll-item"><span style="color:var(--heur);font-weight:800;font-size:11px">▼ REQ</span> <span class="lvbadge" style="background:var(--heur)">L${f.required_level}</span> Required · <span class="lk">${esc(f.required_name)}</span></span>
-    </div>
+  const tier=cls&&cls.proportionality?cls.proportionality.tier:null;
+  const score=cls&&cls.proportionality?cls.proportionality.score:null;
 
-    <div class="cov">
-      <div class="covcell">
-        <div class="cl">Design completeness <b class="num">${Math.round(f.design_done*100)}%</b></div>
-        <div class="covtrack"><div class="covfill design" style="width:${Math.round(f.design_done*100)}%"></div></div>
-        <div class="cn">The control as written, evidenced.</div>
+  $('report').innerHTML=`
+    <div class="report-h">
+      <div class="obj">
+        <h2>Supply-chain security — ${esc(f.control_id)}</h2>
+        <div class="objtxt">${esc(CONTROL.objective)}</div>
+        <div class="maps">${isoChips}${csfChips}</div>
       </div>
-      <div class="covcell">
-        <div class="cl">Operating completeness <b class="num">${Math.round(f.operating_done*100)}%</b></div>
-        <div class="covtrack"><div class="covfill operating" style="width:${Math.round(f.operating_done*100)}%"></div></div>
-        <div class="cn">Proof the control actually ran.</div>
+      <div class="actions noprint"><button class="btn ghost" onclick="window.print()">${ICON.print} Print / export</button></div>
+    </div>
+    <div class="hr"></div>
+
+    <div class="sect">
+      <div class="sect-t"><span class="num-badge">01</span> Verdict</div>
+      <div class="verdict-band">
+        <div class="vb-status ${statusMeta.sb}">
+          <div class="si">${statusMeta.i}</div>
+          <div><div class="stt">${statusMeta.t}</div><div class="sts">${statusMeta.s}</div></div>
+        </div>
+        <div class="vb-metrics">
+          <div class="vbm"><span class="k">Achieved</span><span class="v"><span class="lvbadge lv${f.achieved_level}">L${f.achieved_level}</span></span></div>
+          <div class="vbm"><span class="k">Required</span><span class="v"><span class="lvbadge lv${f.required_level}">L${f.required_level}</span></span></div>
+          <div class="vbm"><span class="k">Residual risk</span><span class="v"><span class="rr ${rr.cls}">${rr.label}</span></span></div>
+        </div>
+      </div>
+      <div class="pbc-foot">Residual-risk band is a presentation of the engine's gap (${f.gap} rung${f.gap===1?'':'s'}); it introduces no new scoring.</div>
+    </div>
+
+    <div class="sect">
+      <div class="sect-t"><span class="num-badge">02</span> Maturity ladder</div>
+      ${ladderHtml(f.achieved_level,f.required_level,vcls)}
+      <div class="ladder-legend">
+        <span class="ll-item"><span class="lvbadge" style="background:${vcol}">L${f.achieved_level}</span> Achieved · <span class="lk">${esc(f.achieved_name)}</span></span>
+        <span class="ll-item"><span style="color:var(--heur);font-weight:800;font-size:11px">▼ REQ</span> <span class="lvbadge" style="background:var(--heur)">L${f.required_level}</span> Required · <span class="lk">${esc(f.required_name)}</span></span>
+        ${f.gap===0?`<span class="gappill gp-0">Meets — no gap</span>`:`<span class="gappill gp-n">Gap of ${f.gap} rung${f.gap>1?'s':''}</span>`}
       </div>
     </div>
 
-    <div class="ev-head"><h3>${ICON.search} Cited evidence</h3><span class="cnt">${f.evidence?f.evidence.length:0} item${(f.evidence&&f.evidence.length===1)?'':'s'} · ${esc(f.nis2_ref||'')}</span></div>
-    ${evHtml}
+    <div class="sect">
+      <div class="sect-t"><span class="num-badge">03</span> Design vs operating completeness</div>
+      <div class="cov">
+        <div class="covcell">
+          <div class="cl">Design (documented) <b class="num">${Math.round(f.design_done*100)}%</b></div>
+          <div class="covtrack"><div class="covfill design" style="width:${Math.round(f.design_done*100)}%"></div></div>
+          <div class="cn">The control as written, evidenced.</div>
+        </div>
+        <div class="covcell">
+          <div class="cl">Operating (ran in window) <b class="num">${Math.round(f.operating_done*100)}%</b></div>
+          <div class="covtrack"><div class="covfill operating" style="width:${Math.round(f.operating_done*100)}%"></div></div>
+          <div class="cn">Proof the control actually ran.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sect">
+      <div class="sect-t"><span class="num-badge">04</span> Evidence examined · ${esc(f.nis2_ref||'')}</div>
+      <div class="ev-group" style="color:var(--accent-2)">Design evidence — ${design.length} cited</div>
+      ${designEv}
+      <div class="ev-group" style="color:#0c5d36">Operating evidence — ${operating.length} cited</div>
+      ${opEv}
+    </div>
     ${vetoHtml}
 
-    <div class="rationale">${esc(f.rationale)}</div>
-    <div class="draftnote">${ICON.warn}${esc(f.draft||'DRAFT — REQUIRES REVIEW')}</div>`;
+    <div class="sect">
+      <div class="sect-t"><span class="num-badge">05</span> PBC checklist — requested vs satisfied</div>
+      <div class="pbc">${pbcRows}</div>
+      <div class="pbc-foot">Marks reflect whether the engine returned cited evidence of each type — ✓ cited · ✕ not provided · – out of documentary scope. They do not themselves determine the maturity level.</div>
+    </div>
+
+    <div class="sect">
+      <div class="sect-t"><span class="num-badge">06</span> Finding &amp; observation</div>
+      <div class="prose">${findingNarrative(f)}</div>
+    </div>
+
+    <div class="sect">
+      <div class="sect-t"><span class="num-badge">07</span> Recommendation</div>
+      <div class="prose rec">${recommendation(f)}</div>
+    </div>
+
+    <div class="sect">
+      <div class="sect-t"><span class="num-badge">08</span> Management response</div>
+      <div class="mgmt">
+        <div><label>Action owner</label><input type="text" placeholder="Name / role"></div>
+        <div><label>Target remediation date</label><input type="date"></div>
+      </div>
+    </div>
+
+    <div class="sect">
+      <div class="sect-t"><span class="num-badge">09</span> Engine rationale — audit trail</div>
+      <div class="rationale">${esc(f.rationale)}${tier?`\n\nBar derivation: sample entity → ${esc(tier)} tier${score!=null?` (${score}/100)`:''} → required L${f.required_level} (${esc(f.required_name)}), via build_bar(tier). Deterministic; no model.`:''}</div>
+      <div class="draftnote">${ICON.warn}<div><b>${esc(f.draft||'DRAFT — REQUIRES REVIEW')}.</b> No maturity level, gap or verdict on this page is computed in the browser — each is read verbatim from the deterministic engine; the model only located and quoted the evidence above. NIS2 Art 21(1) is outcomes-based — a rung is not a safe harbour.</div></div>
+    </div>`;
 }
 
-async function snapshot(){
-  $('smsg').innerHTML=`<div class="msg info"><span class="spin"></span> Building re-derivable snapshot…</div>`;
-  try{
-    const r=await fetch('/snapshot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({inputs:entityPayload(),control_id:'RM-21D-01'})});
-    const d=await r.json();
-    const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
-    const url=URL.createObjectURL(blob);const a=document.createElement('a');
-    a.href=url;a.download=`atlas_snapshot_${(d.content_sha256||'na').slice(0,12)}.json`;a.click();URL.revokeObjectURL(url);
-    $('smsg').innerHTML=`<div class="msg ok">${ICON.ok}<span>Snapshot <b>${esc(d.status)}</b> · content_sha256 <code>${esc((d.content_sha256||'').slice(0,16))}…</code></span></div>`;
-  }catch(e){$('smsg').innerHTML=`<div class="msg err">${ICON.err}<span>Request failed: ${esc(e)}</span></div>`;}
-}
-
-$('result').innerHTML=`<div class="empty"><div class="ei">${ICON.search}</div><div class="et">Awaiting determination</div><div class="es">Enter entity facts and run a determination.</div></div>`;
-renderProportionality(null);
-classify();
+/* ---- init ---- */
+loadVersion();
+previewBar();
 </script>
 </body>
 </html>
